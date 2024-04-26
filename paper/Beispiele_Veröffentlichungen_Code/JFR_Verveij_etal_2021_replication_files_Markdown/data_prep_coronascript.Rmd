@@ -1,0 +1,874 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+##Corona paper
+
+##opening the data
+
+```{r}
+rm(list=ls())
+
+
+setwd("C:/users/Renske/OneDrive - Erasmus University Rotterdam/Documents/3 hoek/corona")
+library(foreign)
+corona<-read.spss("Vragenlijst voor Renske Verweij.sav", use.value.labels=TRUE, to.data.frame=TRUE)
+
+#, convert.dates=TRUE, convert.factors=TRUE, missing.type=FALSE, convert.underscore=TRUE, warn.missing.labels=TRUE)
+options(max.print=1000000)
+head(corona)
+
+```
+
+##prepare are variables for wave 1
+
+```{r}
+
+
+#werk uren etcetera vader en moeder
+
+#work hours contract
+#table(corona$Omv_aanst_V)
+mean(corona$Omv_aanst_V, na.rm=T)
+sd(corona$Omv_aanst_V, na.rm=T)
+
+#Actual work hours
+#table(corona$Werk_uren_V)
+mean(corona$Werk_uren_V, na.rm=T)
+sd(corona$Werk_uren_V, na.rm=T)
+
+##overwerk
+corona$overwerk_V<-(corona$Werk_uren_V-corona$Omv_aanst_V)
+mean(corona$overwerk_V, na.rm=T)
+sd(corona$overwerk_V, na.rm=T)
+
+#opleiding
+#table(corona$Opl_hoogst_V)
+corona$Opl_simpel_V<-NA
+corona$Opl_simpel_V[corona$Opl_hoogst_V==1]<-"MBO of minder"
+corona$Opl_simpel_V[corona$Opl_hoogst_V==2]<-"MBO of minder"
+corona$Opl_simpel_V[corona$Opl_hoogst_V==3]<-"MBO of minder"
+corona$Opl_simpel_V[corona$Opl_hoogst_V==4]<-"MBO of minder"
+corona$Opl_simpel_V[corona$Opl_hoogst_V==5]<-"MBO of minder"
+corona$Opl_simpel_V[corona$Opl_hoogst_V==6]<-"MBO of minder"
+corona$Opl_simpel_V[corona$Opl_hoogst_V==7]<-"HBO/WO"
+corona$Opl_simpel_V[corona$Opl_hoogst_V==8]<-"HBO/WO"
+corona$Opl_simpel_V[corona$Opl_hoogst_V==9]<-"HBO/WO"
+table(corona$Opl_simpel_V)
+prop.table(table(corona$Opl_simpel_V))
+
+#inkomen
+table(corona$Ink_huis_V)
+
+#werk situatie
+#table(corona$Werk_1_V );table(corona$Werk_2_V );  table(corona$Werk_3_V );table(corona$Werk_4_V );  table(corona$Werk_5_V );table(corona$Werk_6_V );  table(corona$Werk_7_V );table(corona$Werk_8_V );  table(corona$Werk_9_V )
+
+corona$Werksituatie_V<-NA
+corona$Werksituatie_V[corona$Werk_3_V==1]<-"werkloos"
+corona$Werksituatie_V[corona$Werk_4_V==1]<-"werkloos"
+corona$Werksituatie_V[corona$Werk_5_V==1]<-"arbeidsongeschikt"
+corona$Werksituatie_V[corona$Werk_7_V==1]<-"pensioen"
+corona$Werksituatie_V[corona$Werk_8_V==1]<-"opleiding"
+corona$Werksituatie_V[corona$Werk_9_V==1]<-"anders"
+corona$Werksituatie_V[corona$Werk_1_V==1]<-"loondienst"
+corona$Werksituatie_V[corona$Werk_2_V==1]<-"zelfstandig"
+corona$Werksituatie_V[corona$Werk_6_V==1]<-"huisouder"
+#table(corona$Werksituatie_V)
+
+corona$Werksituatiesimpel_V<-"niet werkend"
+corona$Werksituatiesimpel_V[corona$Werksituatie_V=="loondienst"]<-"werkend"
+corona$Werksituatiesimpel_V[corona$Werksituatie_V=="zelfstandig"]<-"werkend"
+corona$Werksituatiesimpel_V[!is.na(corona$Werk_uren_V)]<-"werkend"
+corona$Werksituatiesimpel_V[corona$Werk_uren_V==0]<-"niet werkend"
+table(corona$Werksituatiesimpel_V)
+prop.table(table(corona$Werksituatiesimpel_V))
+
+corona$Werk_uren_compleet_V<-corona$Werk_uren_V
+corona$Werk_uren_compleet_V[corona$Werksituatiesimpel_V=="niet werkend"]<-0
+corona$Werk_uren_compleet_V[corona$Werk_uren_compleet_V>=90]<-0   #remove strange outlier
+
+#work hours contract
+#table(corona$Omv_aanst_M)
+mean(corona$Omv_aanst_M, na.rm=T)
+sd(corona$Omv_aanst_M, na.rm=T)
+
+#Actual work hours
+#table(corona$Werk_uren_M)
+mean(corona$Werk_uren_M, na.rm=T)
+sd(corona$Werk_uren_M, na.rm=T)
+
+
+##overwerk
+corona$overwerk_M<-(corona$Werk_uren_M-corona$Omv_aanst_M)
+mean(corona$overwerk_M, na.rm=T)
+sd(corona$overwerk_M, na.rm=T)
+
+#opleiding
+#table(corona$Opl_hoogst_M)
+corona$Opl_simpel_M<-NA
+corona$Opl_simpel_M[corona$Opl_hoogst_M==1]<-"MBO of minder"
+corona$Opl_simpel_M[corona$Opl_hoogst_M==2]<-"MBO of minder"
+corona$Opl_simpel_M[corona$Opl_hoogst_M==3]<-"MBO of minder"
+corona$Opl_simpel_M[corona$Opl_hoogst_M==4]<-"MBO of minder"
+corona$Opl_simpel_M[corona$Opl_hoogst_M==5]<-"MBO of minder"
+corona$Opl_simpel_M[corona$Opl_hoogst_M==6]<-"MBO of minder"
+corona$Opl_simpel_M[corona$Opl_hoogst_M==7]<-"HBO/WO"
+corona$Opl_simpel_M[corona$Opl_hoogst_M==8]<-"HBO/WO"
+corona$Opl_simpel_M[corona$Opl_hoogst_M==9]<-"HBO/WO"
+table(corona$Opl_simpel_M)
+prop.table(table(corona$Opl_simpel_M))
+
+#inkomen
+table(corona$Ink_huis_M)
+prop.table(table(corona$Ink_huis_M))
+
+#werk situatie
+#table(corona$Werk_1_M );table(corona$Werk_2_M );  table(corona$Werk_3_M );table(corona$Werk_4_M );  table(corona$Werk_5_M );table(corona$Werk_6_M );  table(corona$Werk_7_M );table(corona$Werk_8_M );  table(corona$Werk_9_M )
+
+#welke uitspraak past het beste bij uw werksituatie? 
+corona$Werksituatie_M<-NA
+corona$Werksituatie_M[corona$Werk_3_M==1]<-"werkloos"
+corona$Werksituatie_M[corona$Werk_4_M==1]<-"werkloos"
+corona$Werksituatie_M[corona$Werk_5_M==1]<-"arbeidsongeschikt"
+corona$Werksituatie_M[corona$Werk_7_M==1]<-"pensioen"
+corona$Werksituatie_M[corona$Werk_8_M==1]<-"opleiding"
+corona$Werksituatie_M[corona$Werk_9_M==1]<-"anders"
+corona$Werksituatie_M[corona$Werk_1_M==1]<-"loondienst"
+corona$Werksituatie_M[corona$Werk_2_M==1]<-"zelfstandig"
+corona$Werksituatie_M[corona$Werk_6_M==1]<-"huisouder"
+table(corona$Werksituatie_M)
+
+corona$Werksituatiesimpel_M<-"niet werkend"
+corona$Werksituatiesimpel_M[corona$Werksituatie_M=="loondienst"]<-"werkend"
+corona$Werksituatiesimpel_M[corona$Werksituatie_M=="zelfstandig"]<-"werkend"
+corona$Werksituatiesimpel_M[!is.na(corona$Werk_uren_M)]<-"werkend"
+corona$Werksituatiesimpel_M[corona$Werk_uren_M==0]<-"niet werkend"
+table(corona$Werksituatiesimpel_M)
+prop.table(table(corona$Werksituatiesimpel_M))
+
+corona$Werk_uren_compleet_M<-corona$Werk_uren_M
+corona$Werk_uren_compleet_M[corona$Werksituatiesimpel_M=="niet werkend"]<-0
+corona$Werk_uren_compleet_M[corona$Werk_uren_compleet_M>=90]<-0   #remove strange outlier
+
+
+#controle
+
+#geslacht kind
+table(corona$Geslacht_K_V )
+prop.table(table(corona$Geslacht_K_V ))
+
+#aantal kinderen in gezin
+table(corona$Sibl_K_V  )
+prop.table(table(corona$Sibl_K_V  ))
+corona$Sibl_K_Vn<-as.numeric(corona$Sibl_K_V)
+corona$nrsiblings<-NA
+corona$nrsiblings[corona$Sibl_K_Vn==1]<-0
+corona$nrsiblings[corona$Sibl_K_Vn==2]<-1
+corona$nrsiblings[corona$Sibl_K_Vn==3]<-2
+corona$nrsiblings[corona$Sibl_K_Vn==4]<-3
+corona$nrsiblings[corona$Sibl_K_Vn==5]<-4
+table(corona$nrsiblings)
+
+
+corona$onlychild<-NA
+corona$onlychild[corona$Sibl_K_Vn==1]<-"yes"
+corona$onlychild[corona$Sibl_K_Vn==2]<-"no"
+corona$onlychild[corona$Sibl_K_Vn==3]<-"no"
+corona$onlychild[corona$Sibl_K_Vn==4]<-"no"
+corona$onlychild[corona$Sibl_K_Vn==5]<-"no"
+table(corona$onlychild)
+
+##Corona aantal kinderen
+corona$aantalkinderen_corona<-corona$nrsiblings+corona$geboorte+1
+
+#plaats in rij kind
+table(corona$Rij_K_V  )
+prop.table(table(corona$Rij_K_V  ))
+
+##Is er een jonger zwoertjes
+corona$jongerzwoertje<-NA
+corona$jongerzwoertje[corona$Rij_K_V=="Oudste kind (eerst geboren)"]<-"ja"
+corona$jongerzwoertje[corona$Rij_K_V=="Het kind heeft zowel oudere als jongere broers/zussen"]<-"ja"
+corona$jongerzwoertje[corona$Rij_K_V=="Enig kind"]<-"nee"
+corona$jongerzwoertje[corona$Rij_K_V=="Jongste kind (laatst geboren)"]<-"nee"
+
+##is er een jonger broertje of zusje tijdens corona?
+table(corona$Rij_K_V) ; table(corona$geboorte); table(corona$Rij_K_V,corona$geboorte)
+corona$jongerzwoertje_corona<-NA
+corona$jongerzwoertje_corona[corona$Rij_K_V=="Oudste kind (eerst geboren)"]<-"ja"
+corona$jongerzwoertje_corona[corona$Rij_K_V=="Het kind heeft zowel oudere als jongere broers/zussen"]<-"ja"
+corona$jongerzwoertje_corona[corona$Rij_K_V=="Enig kind"]<-"nee"
+corona$jongerzwoertje_corona[corona$Rij_K_V=="Jongste kind (laatst geboren)"]<-"nee"
+corona$jongerzwoertje_corona[corona$geboorte==1]<-"ja"
+table(corona$jongerzwoertje_corona)
+
+
+#(leeftijd kind in maanden door moeder) )
+mean(corona$Leeft_K_mnd, na.rm=T )
+sd(corona$Leeft_K_mnd, na.rm=T )
+
+##leeftijd kind in maanden tijdens corona wave May 11 2020
+##geboortedatum kind Q10_M
+#install.packages("eeptools")
+library(eeptools)
+
+##Age child by mother
+corona$datemother<-"2020-05-11"
+corona$datemother<-as.Date(corona$datemother)
+corona$Q10_Mdate<-as.Date(corona$Q10_M, "%d-%m-%Y")
+corona$Q10_Mdate[is.na(corona$Q10_Mdate)]<-"2020-05-11"
+corona$Q10_Mdate[corona$Q10_Mdate=="0015-11-11"]<-"2015-11-11"
+corona$Q10_Mdate[corona$Q10_Mdate=="0015-07-23"]<-"2015-07-23"
+corona$Q10_Mdate[corona$Q10_Mdate=="0004-03-16"]<-"2014-04-03"
+
+corona$agecorona_m<-age_calc(dob=corona$Q10_Mdate, enddate=corona$datemother, units='months')
+corona$agecorona_m[corona$agecorona_m==0]<-NA
+
+##age child by father
+corona$datefather<-"2020-05-11"
+corona$datefather<-as.Date(corona$datefather)
+corona$Q10_Vdate<-as.Date(corona$Q10_V, "%d-%m-%Y")
+corona$Q10_Vdate[is.na(corona$Q10_Vdate)]<-"2020-05-11"
+corona$Q10_Vdate[corona$Q10_Vdate=="0015-11-20"]<-"2015-11-20"
+corona$Q10_Vdate[corona$Q10_Vdate=="0015-11-11"]<-"2015-11-11"
+
+corona$agecorona_v<-age_calc(dob=corona$Q10_Vdate, enddate=corona$datefather, units='months')
+corona$agecorona_v[corona$agecorona_v==0]<-NA
+
+##leeftijd vader en moeder
+mean(corona$Leeft_M, na.rm=T)
+sd(corona$Leeft_M, na.rm=T)
+
+mean(corona$Leeft_V, na.rm=T)
+sd(corona$Leeft_V, na.rm=T)
+
+#zorgen voor mijn kind kost meer energie dan ik heb)
+corona$zorgkindveelenergie_V<-corona$PSS_3_V
+table(corona$zorgkindveelenergie_V)
+
+#maak me zorgen of ik genoeg doe voor mijn kind)
+corona$zorgentijdkind_V<-corona$PSS_4_V
+table(corona$zorgentijdkind_V)
+
+#zorgen voor mijn kind kost meer energie dan ik heb)
+corona$zorgkindveelenergie_M<-corona$PSS_3_M
+table(corona$zorgkindveelenergie_M)
+
+#maak me zorgen of ik genoeg doe voor mijn kind)
+corona$zorgentijdkind_M<-corona$PSS_4_M
+table(corona$zorgentijdkind_M)
+
+
+corona$attachment_V<-corona$AQS_corr_V
+#hist(corona$attachment_V); mean(corona$attachment_V, na.rm=T)
+corona$attachment_M<-corona$AQS_corr_M
+#hist(corona$attachment_M); mean(corona$attachment_M, na.rm=T)
+
+```
+
+```{r}
+corona$Ink_M_cont<-NA
+corona$Ink_M_cont[corona$Ink_M=="Minder dan 1.000 euro per maand"]<-750
+  corona$Ink_M_cont[corona$Ink_M=="1.000-1.499 euro per maand"]<-1250
+  corona$Ink_M_cont[corona$Ink_M=="1.500-1.999 euro per maand"]<-1750
+  corona$Ink_M_cont[corona$Ink_M=="2.000-2.499 euro per maand"]<-2250
+  corona$Ink_M_cont[corona$Ink_M=="2.500-2.999 euro per maand"]<-2750
+  corona$Ink_M_cont[corona$Ink_M=="3.000-3.499 euro per maand"]<-3250
+  corona$Ink_M_cont[corona$Ink_M=="3.500-3.999 euro per maand"]<-3750
+  corona$Ink_M_cont[corona$Ink_M=="4.000 of meer per maand"]<-5000
+  corona$Ink_M_cont[corona$Ink_M=="Niet van toepassing"]<-NA
+  
+  corona$Ink_V_cont<-NA
+corona$Ink_V_cont[corona$Ink_M=="Minder dan 1.000 euro per maand"]<-750
+  corona$Ink_V_cont[corona$Ink_M=="1.000-1.499 euro per maand"]<-1250
+  corona$Ink_V_cont[corona$Ink_M=="1.500-1.999 euro per maand"]<-1750
+  corona$Ink_V_cont[corona$Ink_M=="2.000-2.499 euro per maand"]<-2250
+  corona$Ink_V_cont[corona$Ink_M=="2.500-2.999 euro per maand"]<-2750
+  corona$Ink_V_cont[corona$Ink_M=="3.000-3.499 euro per maand"]<-3250
+  corona$Ink_V_cont[corona$Ink_M=="3.500-3.999 euro per maand"]<-3750
+  corona$Ink_V_cont[corona$Ink_M=="4.000 of meer per maand"]<-5000
+  corona$Ink_V_cont[corona$Ink_M=="Niet van toepassing"]<-NA
+```
+
+##workhours wave 2
+
+###werkuren tijdens corona
+```{r}
+#corona$Q78_M ##contract uren
+#corona$Q79_M ##daadwerkelijke uren
+corona$werkuren_moeder_corona<-substr(corona$Q79_M, start = 1, stop = 2)
+corona$werkuren_moeder_corona[ corona$werkuren_moeder_corona=="0,"]<-0
+corona$werkuren_moeder_corona[ corona$werkuren_moeder_corona=="nv"]<-0
+corona$werkuren_moeder_corona[ corona$werkuren_moeder_corona=="ee" ]<-1
+corona$werkuren_moeder_corona[ corona$werkuren_moeder_corona=="7u"]<-7
+corona$werkuren_moeder_corona[ corona$werkuren_moeder_corona=="zo"]<-10
+table(corona$werkuren_moeder_corona)
+corona$werkuren_moeder_corona
+
+
+corona$werkuren_moeder_corona[ corona$werkuren_moeder_corona=="  "& corona$Q3_3_M==1]<-0   ##voor begin maart werkloos
+corona$werkuren_moeder_corona[ corona$werkuren_moeder_corona=="  "&corona$Q3_4_M==1]<-0   ##voor begin maart werkloos
+corona$werkuren_moeder_corona[ corona$werkuren_moeder_corona=="  "&corona$Q3_5_M==1]<-0   ##arbeidsongeschikt
+corona$werkuren_moeder_corona[ corona$werkuren_moeder_corona=="  "&corona$Q3_6_M==1]<-0   ##zorgde voor kinderen
+corona$werkuren_moeder_corona[ corona$werkuren_moeder_corona=="  "&corona$Q3_7_M==1]<-0   ##VUT pensoen
+corona$werkuren_moeder_corona[ corona$werkuren_moeder_corona=="  "&corona$Q3_8_M==1]<-0   ##opleiding/studie
+
+corona$werkuren_moeder_corona[ corona$werkuren_moeder_corona=="  "&corona$Q41_M==1]<-0   ###sinds begin maart werk ik niet meer
+
+corona$werkuren_moeder_corona
+corona$werkuren_moeder_corona<-as.numeric(corona$werkuren_moeder_corona)
+corona$werkuren_moeder_corona
+
+length(which(is.na(corona$werkuren_moeder_corona)))
+#Check<- corona[c("werkuren_moeder_corona", "Q79_M",  "Q3_9_TEXT_M",  "Q41_M","werkurenmoeder_corona","Q78_M")]
+#Check<- corona[c("werkuren_moeder_corona", "Q79_M",  "Q3_9_TEXT_M",  "Q41_M","werkurenmoeder_corona","Q78_M")]
+##voor een aantal moeders dat aangeeft te zijn gaan werken Q41_4, hebben we geen werkuren......Niet zo'n probleem voor ons want niet in de sample 
+
+###Check<- corona[c("Q78_M", "Q79_M", "werkurenmoeder_corona", "werkuren_moeder_corona")]
+
+##remove old variable and rename the new one
+corona$werkuren_contract_moeder_corona<-corona$werkurenmoeder_corona
+corona$werkurenmoeder_corona<-NULL
+corona$werkurenmoeder_corona<-corona$werkuren_moeder_corona
+
+###missende waarden aanvullen, 1 moeder zegt 11 uur bij contract en leeg bij daadwerkelijk, en is zzp-er. dus 11 ingevuld 
+corona$werkurenmoeder_corona[corona$werkuren_contract_moeder_corona==11 & is.na(corona$werkurenmoeder_corona)]<-11
+
+###een aantal missende waarden door een verkeerde combinatie antwoorden, deze imputeren we op basis van werkuren tijdens wave 1
+corona$Q41_Mmis<-corona$Q41_M; corona$Q41_Mmis[(is.na(corona$Q41_M))]<-"missing"
+corona$werkurenmoeder_corona_imputed<-corona$werkurenmoeder_corona
+corona$werkurenmoeder_corona_imputed[is.na(corona$werkurenmoeder_corona)& corona$Q41_Mmis==4]<-corona$Werk_uren_compleet_M[is.na(corona$werkurenmoeder_corona)& corona$Q41_Mmis==4]
+corona$werkurenmoeder_corona_imputed[is.na(corona$werkurenmoeder_corona)& corona$Q41_Mmis=="missing"]<-corona$Werk_uren_compleet_M[is.na(corona$werkurenmoeder_corona)& corona$Q41_Mmis=="missing"]
+
+Checkm<- corona[c("werkurenmoeder_corona","werkuren_contract_moeder_corona", "Werk_uren_compleet_M", "Omv_aanst_M", "werkurenmoeder_corona_imputed" ,"Q79_M",  "Q3_9_TEXT_M",  "Q41_M","Q78_M", "Q3_1_M", "Q3_2_M", "Q3_3_M", "Q3_4_M", "Q3_5_M", "Q3_6_M", "Q3_7_M", "Q3_8_M" , "Q40_M", "werkprive_moeder_corona" )]
+```
+
+```{r}
+#corona$Q78_V ##contract uren
+#corona$Q79_V ##daadwerkelijke uren
+
+corona$werkuren_vader_corona<-NULL
+
+corona$werkuren_vader_corona<-substr(corona$Q79_V, start = 1, stop = 2)
+table(corona$werkuren_vader_corona)
+corona$werkuren_vader_corona[ corona$werkuren_vader_corona=="di"]<-45
+corona$werkuren_vader_corona[ corona$werkuren_vader_corona=="on"]<-50
+table(corona$werkuren_vader_corona)
+
+
+
+corona$werkuren_vader_corona[ corona$werkuren_vader_corona=="  "& corona$Q3_3_V==1]<-0   ##voor begin maart werkloos
+corona$werkuren_vader_corona[ corona$werkuren_vader_corona=="  "&corona$Q3_4_V==1]<-0   ##voor begin maart werkloos
+corona$werkuren_vader_corona[ corona$werkuren_vader_corona=="  "&corona$Q3_5_V==1]<-0   ##arbeidsongeschikt
+corona$werkuren_vader_corona[ corona$werkuren_vader_corona=="  "&corona$Q3_6_V==1]<-0   ##zorgde voor kinderen
+corona$werkuren_vader_corona[ corona$werkuren_vader_corona=="  "&corona$Q3_7_V==1]<-0   ##VUT pensoen
+corona$werkuren_vader_corona[ corona$werkuren_vader_corona=="  "&corona$Q3_8_V==1]<-0   ##opleiding/studie
+
+corona$werkuren_vader_corona[ corona$werkuren_vader_corona=="  "&corona$Q41_V==1]<-0   ###sinds begin maart werk ik niet meer
+
+
+##Sommige vaders gaven aan dat er niks is veranderd sinds corona, en gaven contract uren, deze gebruik ik
+corona$werkuren_vader_corona[corona$werkuren_vader_corona=="  "]<-"bla"
+corona$Q41_V[is.na(corona$Q41_V)]<-"bla"
+corona$werkuren_vader_corona[corona$werkuren_vader_corona=="bla" & corona$Q41_V==5]<-substr(corona$Q78_V, start = 1, stop = 2)[corona$werkuren_vader_corona=="bla" & corona$Q41_V==5]  ###sinds begin maart werk ik niet meer
+corona$werkuren_vader_corona[corona$werkuren_vader_corona=="ZZ"]<-NA
+corona$werkuren_vader_corona[corona$werkuren_vader_corona=="bla"]<-NA
+
+
+corona$werkuren_vader_corona
+corona$werkuren_vader_corona<-as.numeric(corona$werkuren_vader_corona)
+corona$werkuren_vader_corona
+
+length(which(is.na(corona$werkuren_vader_corona)))
+Checkv<- corona[c("werkuren_vader_corona", "Q79_V", "Q78_V", "Q3_9_TEXT_V", "Q41_V", "werkurenvader_corona")]
+
+##remove old variable and rename the new one
+corona$werkuren_contract_vader_corona<-corona$werkurenvader_corona
+corona$werkurenvader_corona<-NULL
+corona$werkurenvader_corona<-corona$werkuren_vader_corona
+
+
+##de missende aanvullen
+##een vader zei bij werkuren contract: "ZZP'er, dus geen contract. Werk rond de 35 uur p week, soms richting de 40"
+corona$werkurenvader_corona[corona$werkuren_contract_vader_corona==35 & is.na(corona$werkurenvader_corona)]<-35
+
+###een aantal missende waarden door een verkeerde combinatie antwoorden, deze imputeren we op basis van werkuren tijdens wave 1
+corona$Q41_Vmis<-corona$Q41_V; corona$Q41_Vmis[(is.na(corona$Q41_V))]<-"missing"
+corona$werkurenvader_corona_imputed<-corona$werkurenvader_corona
+corona$werkurenvader_corona_imputed[is.na(corona$werkurenvader_corona)& corona$Q41_Vmis==4]<-corona$Werk_uren_compleet_V[is.na(corona$werkurenvader_corona)& corona$Q41_Vmis==4]
+corona$werkurenvader_corona_imputed[is.na(corona$werkurenvader_corona)& corona$Q41_Vmis==4]<-corona$Werk_uren_compleet_V[is.na(corona$werkurenvader_corona)& corona$Q41_Vmis==4]
+corona$werkurenvader_corona_imputed[is.na(corona$werkurenvader_corona)& corona$Q41_Vmis=="bla"]<-corona$Werk_uren_compleet_V[is.na(corona$werkurenvader_corona)& corona$Q41_Vmis=="bla"]
+
+Checkv<- corona[c("werkurenvader_corona", "werkuren_contract_vader_corona", "Werk_uren_compleet_V","werkurenvader_corona_imputed", "Q79_V", "Q78_V", "Q3_9_TEXT_V", "Q41_V", "Q42_1_V", "Q3_1_V", "Q3_2_V", "Q3_3_V", "Q3_4_V", "Q3_5_V", "Q3_6_V", "Q3_7_V", "Q3_8_V" , "Q40_V", "werkprive_vader_corona")]
+
+#
+```
+
+
+##work hours in categories
+```{r}
+table(corona$werkurenmoeder_corona)
+corona$werkurenmoeder_corona_cats[corona$werkurenmoeder_corona==0]<-"not working"
+corona$werkurenmoeder_corona_cats[corona$werkurenmoeder_corona>=1]<-"part-time"
+corona$werkurenmoeder_corona_cats[corona$werkurenmoeder_corona>=32]<-"full-time"
+table(corona$werkurenmoeder_corona_cats)
+
+table(corona$werkurenvader_corona)
+corona$werkurenvader_corona_cats[corona$werkurenvader_corona==0]<-"not working"
+corona$werkurenvader_corona_cats[corona$werkurenvader_corona>=1]<-"part-time"
+corona$werkurenvader_corona_cats[corona$werkurenvader_corona>=32]<-"full-time"
+table(corona$werkurenvader_corona_cats)
+```
+##work hours wave 1
+```{r}
+table(corona$Werk_uren_compleet_M)
+corona$werkurenmoeder_cats[corona$Werk_uren_compleet_M==0]<-"not working"
+corona$werkurenmoeder_cats[corona$Werk_uren_compleet_M>=1]<-"part-time"
+corona$werkurenmoeder_cats[corona$Werk_uren_compleet_M>=32]<-"full-time"
+table(corona$werkurenmoeder_cats)
+
+table(corona$Werk_uren_compleet_V)
+corona$werkurenvader_cats[corona$Werk_uren_compleet_V==0]<-"not working"
+corona$werkurenvader_cats[corona$Werk_uren_compleet_V>=1]<-"part-time"
+corona$werkurenvader_cats[corona$Werk_uren_compleet_V>=32]<-"full-time"
+table(corona$werkurenvader_cats)
+```
+
+
+###Variables pafas create 
+
+```{r}
+###Pre corona
+#names(corona)
+##Make PAFAS variables numeric 
+names <- c(452:467,94:109)
+corona[,names] <- lapply(corona[,names] , as.numeric)
+#corona$PAFAS_15_Mn<-as.numeric(corona$PAFAS_15_M);corona$PAFAS_15_Vn<-as.numeric(corona$PAFAS_15_V)
+#recode(corona$PAFAS_15_M, 1=4,2=3,3=2,4=1); recode(corona$PAFAS_15_V, 1=4,2=3,3=2,4=1)
+#corona$PAFAS_15_M<-(5-corona$PAFAS_15_M); corona$PAFAS_15_V<-(5-corona$PAFAS_15_V)
+
+
+#str(corona)
+
+corona$coerciveparenting_M=rowMeans(corona[,c("PAFAS_2_M", "PAFAS_4_M", "PAFAS_6_M", "PAFAS_7_M","PAFAS_8_M")],na.rm=T) 
+corona$positiveEncouragement_M=rowMeans(corona[,c("PAFAS_1_M", "PAFAS_3_M", "PAFAS_5_M")],na.rm=T) 
+corona$parchildrelation_M=rowMeans(corona[,c("PAFAS_9_M","PAFAS_10_M", "PAFAS_11_M", "PAFAS_12_M", "PAFAS_13_M")],na.rm=T) 
+
+corona$coerciveparenting_V=rowMeans(corona[,c("PAFAS_2_V", "PAFAS_4_V", "PAFAS_6_V", "PAFAS_7_V","PAFAS_8_V")],na.rm=T) 
+corona$positiveEncouragement_V=rowMeans(corona[,c("PAFAS_1_V", "PAFAS_3_V", "PAFAS_5_V")],na.rm=T) 
+corona$parchildrelation_V=rowMeans(corona[,c("PAFAS_9_V","PAFAS_10_V", "PAFAS_11_V", "PAFAS_12_V", "PAFAS_13_V")],na.rm=T) 
+
+##post corona
+##PAFAS mother and father corona into numeric
+
+names <- c(953:988,1198:1227)
+corona[,names] <- lapply(corona[,names] , as.numeric)
+
+corona$Q72_1_0_Mr<-(5-corona$Q72_1_0_M)
+corona$Q72_4_0_Mr<-(5-corona$Q72_4_0_M)
+corona$Q72_12_0_Mr<-(5-corona$Q72_12_0_M)
+corona$Q72_20_Mr<-(5-corona$Q72_20_M)
+
+
+corona$consistency_corona_M =rowMeans(corona[,c("Q72_1_0_Mr", "Q72_3_0_M", "Q72_4_0_Mr", "Q72_11_0_M","Q72_12_0_Mr")],na.rm=T)
+corona$coercive_corona_M =rowMeans(corona[,c("Q72_5_0_M", "Q72_7_0_M", "Q72_9_0_M", "Q72_10_0_M","Q72_13_M")],na.rm=T)
+corona$posencourage_corona_M =rowMeans(corona[,c("Q72_2_0_M", "Q72_6_0_M", "Q72_8_0_M")],na.rm=T)
+corona$parchildrel_corona_M=rowMeans(corona[,c("Q72_14_M", "Q72_15_M", "Q72_16_M", "Q72_17_M","Q72_18_M")],na.rm=T)
+
+corona$Q72_1_0_Vr<-(5-corona$Q72_1_0_V)
+corona$Q72_4_0_Vr<-(5-corona$Q72_4_0_V)
+corona$Q72_12_0_Vr<-(5-corona$Q72_12_0_V)
+corona$Q72_20_Vr<-(5-corona$Q72_20_V)
+
+corona$consistency_corona_V =rowMeans(corona[,c("Q72_1_0_Vr", "Q72_3_0_V", "Q72_4_0_Vr", "Q72_11_0_V","Q72_12_0_Vr")],na.rm=T)
+corona$coercive_corona_V =rowMeans(corona[,c("Q72_5_0_V", "Q72_7_0_V", "Q72_9_0_V", "Q72_10_0_V","Q72_13_V")],na.rm=T)
+corona$posencourage_corona_V=rowMeans(corona[,c("Q72_2_0_V", "Q72_6_0_V", "Q72_8_0_V")],na.rm=T)
+corona$parchildrel_corona_V=rowMeans(corona[,c("Q72_14_V", "Q72_15_V", "Q72_16_V", "Q72_17_V","Q72_18_V")],na.rm=T)
+
+##meaning of scales:
+##consistency:giving in if not listen(Reverse), follow up consequence, threaten but don't do (reverse), same reaction misbehavior always, give child when angry (reverse)
+##coercive: shout when misbehave, make child feal bed as lesson, spank when misbehave, argue about child behavior, get annoyed with my child
+##positive encourage: treat when behave well, praise when behave well, attention when behave well
+##parent child rela: chat with child, enjoy hugging child, proud of my child, enjoy spending time with child, good rela with child 
+
+corona$negative_parenting_corona_M=rowMeans(corona[,c("Q72_5_0_M", "Q72_7_0_M", "Q72_9_0_M", "Q72_10_0_M","Q72_13_M", "Q72_1_0_M", "Q72_4_0_M","Q72_12_0_M" )],na.rm=T)
+corona$negative_parenting_corona_V=rowMeans(corona[,c("Q72_5_0_V", "Q72_7_0_V", "Q72_9_0_V", "Q72_10_0_V","Q72_13_V", "Q72_1_0_V", "Q72_4_0_V","Q72_12_0_V" )],na.rm=T)
+```
+
+###role of the father for fathers and mothers
+```{r}
+table(corona$ROFQ_8_V_R)
+table(corona$ROFQ_9_V_R)
+table(corona$ROFQ_10_V); corona$ROFQ_10_Vn<-as.numeric(corona$ROFQ_10_V); #table(corona$ROFQ_10_Vn)
+table(corona$ROFQ_2_V); corona$ROFQ_2_Vn<-as.numeric(corona$ROFQ_2_V); #table(corona$ROFQ_2_Vn)
+
+corona$role_father_short_V=rowMeans(corona[,c("ROFQ_8_V_R", "ROFQ_9_V_R")],na.rm=T)
+corona$role_father_V=rowMeans(corona[,c("ROFQ_8_V_R", "ROFQ_9_V_R", "ROFQ_10_Vn", "ROFQ_2_Vn")],na.rm=T)
+
+
+table(corona$ROFQ_8_M_R)
+table(corona$ROFQ_9_M_R)
+table(corona$ROFQ_10_M); corona$ROFQ_10_Mn<-as.numeric(corona$ROFQ_10_M); #table(corona$ROFQ_10_Mn)
+table(corona$ROFQ_2_M); corona$ROFQ_2_Mn<-as.numeric(corona$ROFQ_2_M); #table(corona$ROFQ_2_Mn)
+
+corona$role_father_short_M=rowMeans(corona[,c("ROFQ_8_M_R", "ROFQ_9_M_R")],na.rm=T)
+corona$role_father_M=rowMeans(corona[,c("ROFQ_8_M_R", "ROFQ_9_M_R", "ROFQ_10_Mn", "ROFQ_2_Mn")],na.rm=T)
+
+```
+
+
+```{r}
+options(max.print=1000000)
+#names(corona)
+Check<- corona[1326:1381]
+head(Check,100)
+
+```
+
+
+##Reverse values so that higher values mean that person does more
+```{r}
+corona$relativeinv_Mr<-(6-corona$relativeinv_M)
+corona$relativeinv_Vr<-(6-corona$relativeinv_V)
+corona$relativeinv_M_coronar<-(6-corona$relativeinv_M_corona)
+corona$relativeinv_V_coronar<-(6-corona$relativeinv_V_corona)
+
+
+###increase in relative involvement?
+corona$increase_relativeinv_M<-corona$relativeinv_M_coronar-corona$relativeinv_Mr
+corona$increase_relativeinv_V<-corona$relativeinv_V_coronar-corona$relativeinv_Vr
+```
+
+##only values WFC if they really worked
+##this is not required because otherwise they would not be asked
+```{r}
+corona$werkprive_moeder_corona[corona$werkurenmoeder_corona==0]<-NA
+corona$werkprive_vader_corona[corona$werkurenvader_corona==0]<-NA 
+
+corona$privewerk_moeder_corona[corona$werkurenmoeder_corona==0]<-NA
+corona$privewerk_vader_corona[corona$werkurenvader_corona==0]<-NA 
+
+
+
+corona$werkprive_moeder[corona$Werk_uren_compleet_M==0]<-NA
+corona$werkprive_vader[corona$Werk_uren_compleet_Vr==0]<-NA 
+
+corona$privewerk_moeder[corona$Werk_uren_compleet_M==0]<-NA
+corona$privewerk_vader[corona$Werk_uren_compleet_V==0]<-NA 
+```
+
+##changes FWC
+```{r}
+corona$increase_privewerk_vader<-(corona$privewerk_vader_corona-corona$privewerk_vader)
+hist(corona$increase_privewerk_vader)
+corona$increase_privewerk_moeder<-(corona$privewerk_moeder_corona-corona$privewerk_moeder)
+hist(corona$increase_privewerk_moeder)
+```
+
+##changes WFC
+```{r}
+corona$increase_werkprive_vader<-(corona$werkprive_vader_corona-corona$werkprive_vader)
+hist(corona$increase_werkprive_vader)
+corona$increase_werkprive_moeder<-(corona$werkprive_moeder_corona-corona$werkprive_moeder)
+hist(corona$increase_werkprive_moeder)
+```
+
+##changes parenting
+```{r}
+corona$increaseparchildrel_M<-(corona$parchildrel_corona_M-corona$parchildrelation_M); mean(corona$increaseparchildrel_M, na.rm=T)
+corona$increasecoersive_M<-(corona$coercive_corona_M-corona$coerciveparenting_M); mean(corona$increasecoersive_M, na.rm=T)
+corona$increaseposencourage_M<-(corona$posencourage_corona_M-corona$positiveEncouragement_M); mean(corona$increaseposencourage_M, na.rm=T)
+  
+corona$increaseparchildrel_V<-(corona$parchildrel_corona_V-corona$parchildrelation_V); mean(corona$increaseparchildrel_V, na.rm=T)
+corona$increasecoersive_V<-(corona$coercive_corona_V-corona$coerciveparenting_V); mean(corona$increasecoersive_V, na.rm=T)
+corona$increaseposencourage_V<-(corona$posencourage_corona_V-corona$positiveEncouragement_V); mean(corona$increaseposencourage_V, na.rm=T)
+   
+
+```
+
+
+##parenting for only parents who worked in both waves
+```{r}
+
+
+corona$missing_M<-"no"
+corona$missing_M[is.na(corona$werkprive_moeder)]<-"missing"
+corona$missing_M[is.na(corona$werkprive_moeder_corona)]<-"missing"
+table(corona$missing_M)
+
+corona$missing_V<-"no"
+corona$missing_V[is.na(corona$werkprive_vader)]<-"missing"
+corona$missing_V[is.na(corona$werkprive_vader_corona)]<-"missing"
+table(corona$missing_V)
+
+corona$positiveEncouragement_m_M<-corona$positiveEncouragement_M; corona$positiveEncouragement_M[corona$missing_M=="missing"]<-NA
+corona$positiveEncouragement_m_V<-corona$positiveEncouragement_V; corona$positiveEncouragement_m_V[corona$missing_V=="missing"]<-NA
+corona$posencourage_corona_m_M<-corona$posencourage_corona_M; corona$posencourage_corona_m_M[corona$missing_M=="missing"]<-NA
+corona$posencourage_corona_m_V<-corona$posencourage_corona_V; corona$posencourage_corona_m_V[corona$missing_V=="missing"]<-NA
+
+corona$coerciveparenting_m_M<-corona$coerciveparenting_M; corona$coerciveparenting_m_M[corona$missing_M=="missing"]<-NA
+corona$coercive_corona_m_M<-corona$coercive_corona_M; corona$coercive_corona_m_M[corona$missing_M=="missing"]<-NA
+corona$coerciveparenting_m_V<-corona$coerciveparenting_V; corona$coerciveparenting_m_V[corona$missing_V=="missing"]<-NA
+corona$coercive_corona_m_V<-corona$coercive_corona_V; corona$coercive_corona_m_V[corona$missing_V=="missing"]<-NA
+
+corona$parchildrelation_m_M<-corona$parchildrelation_M; corona$parchildrelation_m_M[corona$missing_M=="missing"]<-NA
+corona$parchildrel_corona_m_M<-corona$parchildrel_corona_M; corona$parchildrel_corona_m_M[corona$missing_M=="missing"]<-NA
+corona$parchildrelation_m_V<-corona$parchildrelation_V; corona$parchildrelation_m_V[corona$missing_V=="missing"]<-NA
+corona$parchildrel_corona_m_V<-corona$parchildrel_corona_V; corona$parchildrel_corona_m_V[corona$missing_V=="missing"]<-NA
+```
+
+#werkprive only for parents who worked in both waves. 
+```{r}
+
+
+corona$privewerk_moederm<-corona$privewerk_moeder; corona$privewerk_moederm[is.na(corona$privewerk_moeder_corona)]<-NA
+corona$privewerk_moeder_coronam<-corona$privewerk_moeder_corona;corona$privewerk_moeder_coronam[is.na(corona$privewerk_moeder)]<-NA
+
+corona$privewerk_vaderm<-corona$privewerk_vader; corona$privewerk_vaderm[is.na(corona$privewerk_vader_corona)]<-NA
+corona$privewerk_vader_coronam<-corona$privewerk_vader_corona;corona$privewerk_vader_coronam[is.na(corona$privewerk_vader)]<-NA
+
+corona$werkprive_moederm<-corona$werkprive_moeder; corona$werkprive_moederm[is.na(corona$werkprive_moeder_corona)]<-NA
+corona$werkprive_moeder_coronam<-corona$werkprive_moeder_corona;corona$werkprive_moeder_coronam[is.na(corona$werkprive_moeder)]<-NA
+
+corona$werkprive_vaderm<-corona$werkprive_vader; corona$werkprive_vaderm[is.na(corona$werkprive_vader_corona)]<-NA
+corona$werkprive_vader_coronam<-corona$werkprive_vader_corona;corona$werkprive_vader_coronam[is.na(corona$werkprive_vader)]<-NA
+
+```
+
+
+
+##change in work hours
+```{r}
+
+
+#table(corona$werkurenvader); sum(!is.na(corona$werkurenvader)) ##95 vaders
+#table(corona$Werk_uren_V); sum(!is.na(corona$Werk_uren_V))   ##93 
+table(corona$Werk_uren_compleet_V); sum(!is.na(corona$Werk_uren_compleet_V)) ##96 (ook paar met 0 erbij)
+
+
+#table(corona$Werksituatiesimpel_V); sum(!is.na(corona$Werksituatiesimpel_V)) ##96
+table(corona$werkurenvader_corona); sum(!is.na(corona$werkurenvader_corona))  ##83 vaders 
+corona$increase_werkuren_vader<-(corona$werkurenvader_corona-corona$Werk_uren_compleet_V)
+table(corona$increase_werkuren_vader); mean (corona$increase_werkuren_vader, na.rm=T); sum(!is.na(corona$increase_werkuren_vader))
+corona$huisvader_corona<-NA; corona$huisvader_corona[corona$werkurenvader_corona==0]<-"yes"; corona$huisvader_corona[corona$werkurenvader_corona>0]<-"no"
+corona$increase_werkuren_vader_imputed<-(corona$werkurenvader_corona_imputed-corona$Werk_uren_compleet_V)
+
+corona$startstopworking_vader<-NA; 
+corona$startstopworking_vader[corona$Werk_uren_compleet_V==0 & corona$werkurenvader_corona==0]<-"remained not working"
+corona$startstopworking_vader[corona$Werk_uren_compleet_V==0 & corona$werkurenvader_corona>0]<-"start working"
+corona$startstopworking_vader[corona$Werk_uren_compleet_V>0 & corona$werkurenvader_corona==0]<-"stopped working"
+corona$startstopworking_vader[corona$Werk_uren_compleet_V>0 & corona$werkurenvader_corona>0]<-"remained working"
+table(corona$startstopworking_vader)
+
+
+#table(corona$werkurenmoeder); sum(!is.na(corona$werkurenmoeder)) ##96 moeders
+#table(corona$Werk_uren_M); sum(!is.na(corona$Werk_uren_M))  ##81 moeders, veel minder met 0 uur erbij
+table(corona$Werk_uren_compleet_M); sum(!is.na(corona$Werk_uren_compleet_M)) ##96
+#table(corona$Werksituatiesimpel_M); sum(!is.na(corona$Werksituatiesimpel_M)) ###96 moeders
+table(corona$werkurenmoeder_corona); sum(!is.na(corona$werkurenmoeder_corona)) ##87 moeders
+corona$increase_werkuren_moeder<-(corona$werkurenmoeder_corona-corona$Werk_uren_compleet_M)
+table(corona$increase_werkuren_moeder); mean (corona$increase_werkuren_moeder, na.rm=T);sum(!is.na(corona$increase_werkuren_moeder)) 
+corona$huismoeder_corona<-NA; corona$huismoeder_corona[corona$werkurenmoeder_corona==0]<-"yes"; corona$huismoeder_corona[corona$werkurenmoeder_corona>0]<-"no"
+corona$increase_werkuren_moeder_imputed<-(corona$werkurenmoeder_corona_imputed-corona$Werk_uren_compleet_M)
+
+
+corona$startstopworking_moeder<-NA; 
+corona$startstopworking_moeder[corona$Werk_uren_compleet_M==0 & corona$werkurenmoeder_corona==0]<-"remained not working"
+corona$startstopworking_moeder[corona$Werk_uren_compleet_M==0 & corona$werkurenmoeder_corona>0]<-"start working"
+corona$startstopworking_moeder[corona$Werk_uren_compleet_M>0 & corona$werkurenmoeder_corona==0]<-"stopped working"
+corona$startstopworking_moeder[corona$Werk_uren_compleet_M>0 & corona$werkurenmoeder_corona>0]<-"remained working"
+table(corona$startstopworking_moeder)
+
+```
+
+
+##change in work
+```{r}
+table(corona$Q41_M)
+corona$veranderingwerk_moeder_corona<-NA
+corona$veranderingwerk_moeder_corona[corona$Q41_M==1]<-"stopped"; 
+corona$veranderingwerk_moeder_corona[corona$Q41_M==2]<-"reduced";
+corona$veranderingwerk_moeder_corona[corona$Q41_M==3]<-"increased";
+corona$veranderingwerk_moeder_corona[corona$Q41_M==4]<-"started";
+corona$veranderingwerk_moeder_corona[corona$Q41_M==5]<-"same"
+table(corona$veranderingwerk_moeder_corona)
+
+##Reduced or stopped for children
+table(corona$Q42_2_M)
+table(corona$Q43_2_M)
+corona$veranderingwerkvoorzorg_moeder_corona<-"no"
+corona$veranderingwerkvoorzorg_moeder_corona[corona$Q42_2_M==1]<-"yes"
+corona$veranderingwerkvoorzorg_moeder_corona[corona$Q43_2_M==1]<-"yes"
+table(corona$veranderingwerkvoorzorg_moeder_corona)
+
+##En voor vaders
+table(corona$Q41_V)
+corona$veranderingwerk_vader_corona<-NA
+corona$veranderingwerk_vader_corona[corona$Q41_V==1]<-"stopped"; 
+corona$veranderingwerk_vader_corona[corona$Q41_V==2]<-"reduced";
+corona$veranderingwerk_vader_corona[corona$Q41_V==3]<-"increased";
+corona$veranderingwerk_vader_corona[corona$Q41_V==4]<-"started";
+corona$veranderingwerk_vader_corona[corona$Q41_V==5]<-"same"
+table(corona$veranderingwerk_vader_corona)
+
+##Reduced or stopped for children
+table(corona$Q42_2_V)
+table(corona$Q43_2_V)
+corona$veranderingwerkvoorzorg_vader_corona<-"no"
+corona$veranderingwerkvoorzorg_vader_corona[corona$Q42_2_V==1]<-"yes"
+corona$veranderingwerkvoorzorg_vader_corona[corona$Q43_2_V==1]<-"yes"
+table(corona$veranderingwerkvoorzorg_vader_corona)
+
+```
+
+##Financial insecurity corona
+##Q46 Wat is de kans dat de coronavirus-crisis leidt tot een situatie waarin uw inkomsten lager zijn dan wat u nodig hebt om te voldoen in uw basisbehoeften en uw rekeningen te kunnen betalen?      
+```{r}
+
+hist(corona$Q46_12_M); hist(corona$Q46_12_V)
+corona$financialinsecurity_vader_corona<-corona$Q46_12_V
+corona$financialinsecurity_moeder_corona<-corona$Q46_12_M
+  
+```
+
+
+
+##Emergency care etcetera since corona
+```{r}
+table(corona$Q47_1_M); table(corona$Q47_2_M); table(corona$Q47_3_M); table(corona$Q47_4_M); table(corona$Q47_5_M); table(corona$Q47_6_M); table(corona$Q47_7_M); table(corona$Q47_8_M); table(corona$Q47_9_M); table(corona$Q47_10_M); table(corona$Q47_11_M)
+corona$noodopvangbeschikbaar_M<-"no"; corona$noodopvangbeschikbaar_M[corona$Q47_7_M==1]<-"yes"
+table(corona$noodopvangbeschikbaar_M)  ###16 mothers indicated that emergency care was possible 
+
+
+table(corona$Q47_1_V); table(corona$Q47_2_V); table(corona$Q47_3_V); table(corona$Q47_4_V); table(corona$Q47_5_V); table(corona$Q47_6_V); table(corona$Q47_7_V); table(corona$Q47_8_V); table(corona$Q47_9_V); table(corona$Q47_10_V); table(corona$Q47_11_V)
+corona$noodopvangbeschikbaar_V<-"no"; corona$noodopvangbeschikbaar_V[corona$Q47_7_V==1]<-"yes"
+table(corona$noodopvangbeschikbaar_V)   ##11 vaders gaven aan dat noodopvang mogelijk was. 
+```
+
+
+##schoolwerk
+```{r}
+table(corona$Q71_M)
+corona$schoolwerk_moeder_corona[corona$Q71_M==1]<-"yes";  corona$schoolwerk_moeder_corona[corona$Q71_M==2]<-"no"
+corona$schoolwerk_uren_moeder_corona<-corona$Q50_1_M; corona$schoolwerk_uren_moeder_corona[corona$Q71_M==2]<-0; 
+mean(corona$schoolwerk_uren_moeder_corona, na.rm=T)
+
+
+table(corona$Q71_V)
+corona$schoolwerk_vader_corona[corona$Q71_V==1]<-"yes";  corona$schoolwerk_vader_corona[corona$Q71_V==2]<-"no"
+corona$schoolwerk_uren_vader_corona<-corona$Q50_1_V; corona$schoolwerk_uren_vader_corona[corona$Q71_V==2]<-0; 
+mean(corona$schoolwerk_uren_vader_corona, na.rm=T)
+```
+
+
+###Wellbeing
+##higher value is higher wellbeing
+```{r}
+corona$zenuwachtig_corona_moeder<-6-corona$Q53_1_M; mean(corona$zenuwachtig_corona_moeder, na.rm=T)
+corona$zenuwachtig_corona_moederr<-corona$Q53_1_M; mean(corona$zenuwachtig_corona_moeder, na.rm=T)
+corona$down_corona_moeder<-6-corona$Q53_2_M; mean(corona$down_corona_moeder, na.rm=T)
+corona$down_corona_moederr<-corona$Q53_2_M; mean(corona$down_corona_moeder, na.rm=T)
+corona$kalm_corona_moeder<-6-corona$Q53_3_M; mean(corona$kalm_corona_moeder, na.rm=T)
+corona$somber_corona_moeder<-6-corona$Q53_4_M; mean(corona$somber_corona_moeder, na.rm=T)
+corona$somber_corona_moederr<-corona$Q53_4_M; mean(corona$somber_corona_moeder, na.rm=T)
+corona$gelukkig_corona_moeder<-6-corona$Q53_5_M; mean(corona$gelukkig_corona_moeder, na.rm=T)
+
+corona$welzijnschaal_corona_moeder<-rowMeans(corona[,c("zenuwachtig_corona_moederr", "down_corona_moederr", "kalm_corona_moeder", "somber_corona_moederr","gelukkig_corona_moeder")],na.rm=T)
+mean(corona$welzijnschaal_corona_moeder, na.rm=T)
+
+corona$zenuwachtig_corona_vader<-6-corona$Q53_1_V; mean(corona$zenuwachtig_corona_vader, na.rm=T)
+corona$zenuwachtig_corona_vaderr<-corona$Q53_1_V; mean(corona$zenuwachtig_corona_vader, na.rm=T)
+corona$down_corona_vader<-6-corona$Q53_2_V; mean(corona$down_corona_vader, na.rm=T)
+corona$down_corona_vaderr<-corona$Q53_2_V; mean(corona$down_corona_vader, na.rm=T)
+corona$kalm_corona_vader<-6-corona$Q53_3_V; mean(corona$kalm_corona_vader, na.rm=T)
+corona$somber_corona_vader<-6-corona$Q53_4_V; mean(corona$somber_corona_vader, na.rm=T)
+corona$somber_corona_vaderr<-corona$Q53_4_V; mean(corona$somber_corona_vader, na.rm=T)
+corona$gelukkig_corona_vader<-6-corona$Q53_5_V; mean(corona$gelukkig_corona_vader, na.rm=T)
+
+corona$welzijnschaal_corona_vader<-rowMeans(corona[,c("zenuwachtig_corona_vaderr", "down_corona_vaderr", "kalm_corona_vader", "somber_corona_vaderr","gelukkig_corona_vader")],na.rm=T)
+mean(corona$welzijnschaal_corona_vader, na.rm=T)
+```
+
+##Social support during corona
+##higher value is more support
+```{r}
+
+##reversen degenen waarvan hogere waarden minder steun is
+corona$Q54_2_Mr<-4-corona$Q54_2_M
+corona$Q54_3_Mr<-4-corona$Q54_3_M
+corona$Q54_5_Mr<-4-corona$Q54_5_M
+corona$Q54_6_Mr<-4-corona$Q54_6_M
+corona$Q54_9_Mr<-4-corona$Q54_9_M
+corona$Q54_10_Mr<-4-corona$Q54_10_M
+
+corona$gebreksocialecontacten_corona_moeder<-rowMeans(corona[,c("Q54_1_M", "Q54_2_Mr", "Q54_3_Mr", "Q54_4_M", "Q54_5_Mr", "Q54_6_Mr", "Q54_7_M", "Q54_8_M", "Q54_9_Mr", "Q54_10_Mr", "Q54_11_M" )],na.rm=T)
+mean(corona$gebreksocialecontacten_corona_moeder, na.rm=T) ### hoger meer gebrek
+
+##reversen degenen waarvan hogere waarden minder steun is
+corona$Q54_2_Vr<-4-corona$Q54_2_V
+corona$Q54_3_Vr<-4-corona$Q54_3_V
+corona$Q54_5_Vr<-4-corona$Q54_5_V
+corona$Q54_6_Vr<-4-corona$Q54_6_V
+corona$Q54_9_Vr<-4-corona$Q54_9_V
+corona$Q54_10_Vr<-4-corona$Q54_10_V
+
+corona$gebreksocialecontacten_corona_vader<-rowMeans(corona[,c("Q54_1_V", "Q54_2_Vr", "Q54_3_Vr", "Q54_4_V", "Q54_5_Vr", "Q54_6_Vr", "Q54_7_V", "Q54_8_V", "Q54_9_Vr", "Q54_10_Vr", "Q54_11_V" )],na.rm=T)
+mean(corona$gebreksocialecontacten_corona_vader, na.rm=T) ### hoger meer gebrek
+
+```
+
+##Saving the data
+```{r}
+setwd("C:/users/Renske/OneDrive - Erasmus University Rotterdam/Documents/3 hoek")
+save(corona, file = "corona.RData")
+```
+
+
+```{r}
+##Type of families
+table(corona$opleidummymoeder, corona$opleidummyvader)
+
+coronasub_Mw1<-subset(corona,!is.na(corona$privewerk_moeder))  ##72
+coronasub_Vw1<-subset(corona,!is.na(corona$privewerk_vader))   ##90
+
+coronasub_M<-subset(corona,!is.na(corona$privewerk_moeder_corona))  ##64
+coronasub_V<-subset(corona,!is.na(corona$privewerk_vader_corona))   ##79
+
+check2<-corona[c("werkurenmoeder", "werkprive_moeder" ,"werkurenmoeder_corona","privewerk_moeder_corona",  "werkurenvader","privewerk_vader", "Werksituatiesimpel_V", "werkurenvader_corona","privewerk_vader_corona", "Q45_3_TEXT_M","Q45_3_TEXT_V","Q47_10_TEXT_M","Q47_10_TEXT_V","Q44_3_TEXT_M","Q44_3_TEXT_V", "Q3_9_TEXT_M","Q3_9_TEXT_V","Q55_10_TEXT_M","Q55_10_TEXT_V"     )]
+
+table(corona$opleidummymoeder)
+table(coronasub_Mw1$opleidummymoeder)
+table(coronasub_M$opleidummymoeder)
+
+table(corona$opleidummyvader)
+table(coronasub_Vw1$opleidummyvader)
+table(coronasub_V$opleidummyvader)
+
+```
+
+
+```{r}
+try = corona[c(1:96),c(1100:1200)]
+try2 = corona[c(1:96),c(700:800)]
+```
+
+```{r}
+#educational level among those who remained in the sample and the normal sample
+table(corona$opleidummymoeder)
+table(corona$opleidummyvader)
+
+table(corona$opleidummymoeder, corona$missing_M); prop.table(table(corona$opleidummymoeder, corona$missing_M),1)
+table(corona$opleidummyvader, corona$missing_V); prop.table(table(corona$opleidummyvader, corona$missing_V),1)
+```
+
+#Remove families that got divorced between the two waves
+```{r}
+rm(list=ls())
+setwd("C:/users/Renske/OneDrive - Erasmus University Rotterdam/Documents/3 hoek")
+load(file = "corona.RData")
+
+coronaintact<-subset(corona, corona$Q57_V!=2 & corona$Q76_M!=2)
+
+```
+
+

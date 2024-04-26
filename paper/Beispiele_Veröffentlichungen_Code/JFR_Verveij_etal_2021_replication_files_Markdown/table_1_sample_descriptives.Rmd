@@ -1,0 +1,65 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+##Sample descriptives
+```{r}
+rm(list=ls())
+
+setwd("C:/users/Renske/OneDrive - Erasmus University Rotterdam/Documents/3 hoek")
+load("corona.RData")
+
+```
+
+
+##sample for women who do not have missings
+```{r}
+table(corona$missing_M)
+coronawomen<-subset(corona, corona$missing_M=="no")
+
+mean(coronawomen$Werk_uren_compleet_M); sd(coronawomen$Werk_uren_compleet_M)
+mean(coronawomen$werkuren_moeder_corona, na.rm=T); sd(coronawomen$werkuren_moeder_corona, na.rm=T)
+
+mean(coronawomen$Werk_uren_compleet_V); sd(coronawomen$Werk_uren_compleet_V)
+mean(coronawomen$werkuren_vader_corona, na.rm=T); sd(coronawomen$werkuren_vader_corona,na.rm=T)
+
+mean(coronawomen$Leeft_K_mnd); sd(coronawomen$Leeft_K_mnd)
+mean(coronawomen$Leeft_K_corona); sd(coronawomen$Leeft_K_corona)
+
+table(coronawomen$jongerzwoertje); prop.table(table(coronawomen$jongerzwoertje))
+table(coronawomen$jongerzwoertje_corona); prop.table(table(coronawomen$jongerzwoertje_corona))
+
+table(coronawomen$geboorte); prop.table(table(coronawomen$geboorte))
+
+table(coronawomen$Opl_hoogst_M); prop.table(table(coronawomen$Opl_hoogst_M))
+
+
+```
+
+
+###sample for men who do not have missings
+
+```{r}
+table(corona$missing_V)
+coronamen<-subset(corona, corona$missing_V=="no")
+
+
+mean(coronamen$Werk_uren_compleet_V); sd(coronamen$Werk_uren_compleet_V)
+mean(coronamen$werkuren_vader_corona, na.rm=T); sd(coronamen$werkuren_vader_corona, na.rm=T)
+
+#partner
+mean(coronamen$Werk_uren_compleet_M); sd(coronamen$Werk_uren_compleet_M)
+mean(coronamen$werkuren_moeder_corona, na.rm=T); sd(coronamen$werkuren_moeder_corona,na.rm=T)
+
+mean(coronamen$Leeft_K_mnd); sd(coronamen$Leeft_K_mnd)
+mean(coronamen$Leeft_K_corona); sd(coronamen$Leeft_K_corona)
+
+table(coronamen$jongerzwoertje); prop.table(table(coronamen$jongerzwoertje))
+table(coronamen$jongerzwoertje_corona); prop.table(table(coronamen$jongerzwoertje_corona))
+
+table(coronamen$geboorte); prop.table(table(coronamen$geboorte))
+table(coronamen$Opl_hoogst_V); prop.table(table(coronamen$Opl_hoogst_V))
+
+```
+

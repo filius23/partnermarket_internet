@@ -1,0 +1,291 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+rm(list=ls())
+
+setwd("C:/users/renske/OneDrive - Erasmus University Rotterdam/Documents/3 hoek")
+load("corona.RData")
+
+install.packages("ggplot2")
+library(ggplot2)
+
+options(max.print=1000000)
+#names(corona)
+
+install.packages("Rmisc")
+library(Rmisc)
+
+install.packages("lme4")
+library(lme4)
+
+library(data.table)
+library(tidyverse)
+```
+
+
+
+##remove WFC if this is missing in one of the waves
+```{r}
+corona$werkprive_moederm<-corona$werkprive_moeder; corona$werkprive_moederm[is.na(corona$werkprive_moeder_corona)]<-NA
+corona$werkprive_moeder_coronam<-corona$werkprive_moeder_corona;corona$werkprive_moeder_coronam[is.na(corona$werkprive_moeder)]<-NA
+
+corona$werkprive_vaderm<-corona$werkprive_vader; corona$werkprive_vaderm[is.na(corona$werkprive_vader_corona)]<-NA
+corona$werkprive_vader_coronam<-corona$werkprive_vader_corona;corona$werkprive_vader_coronam[is.na(corona$werkprive_vader)]<-NA
+
+```
+
+```{r}
+corona$privewerk_moederm<-corona$privewerk_moeder; corona$privewerk_moederm[is.na(corona$privewerk_moeder_corona)]<-NA
+corona$privewerk_moeder_coronam<-corona$privewerk_moeder_corona;corona$privewerk_moeder_coronam[is.na(corona$privewerk_moeder)]<-NA
+
+corona$privewerk_vaderm<-corona$privewerk_vader; corona$privewerk_vaderm[is.na(corona$privewerk_vader_corona)]<-NA
+corona$privewerk_vader_coronam<-corona$privewerk_vader_corona;corona$privewerk_vader_coronam[is.na(corona$privewerk_vader)]<-NA
+
+
+```
+
+
+
+##measures of parenting during both waves. 
+##remove this if WFC is missing in one of the two waves
+
+```{r}
+corona$missing_M<-"no"
+corona$missing_M[is.na(corona$werkprive_moeder)]<-"missing"
+corona$missing_M[is.na(corona$werkprive_moeder_corona)]<-"missing"
+table(corona$missing_M)
+
+corona$missing_V<-"no"
+corona$missing_V[is.na(corona$werkprive_vader)]<-"missing"
+corona$missing_V[is.na(corona$werkprive_vader_corona)]<-"missing"
+table(corona$missing_V)
+
+
+
+corona$positiveEncouragement_m_M<-corona$positiveEncouragement_M; corona$positiveEncouragement_M[corona$missing_M=="missing"]<-NA
+corona$positiveEncouragement_m_V<-corona$positiveEncouragement_V; corona$positiveEncouragement_m_V[corona$missing_V=="missing"]<-NA
+corona$posencourage_corona_m_M<-corona$posencourage_corona_M; corona$posencourage_corona_m_M[corona$missing_M=="missing"]<-NA
+corona$posencourage_corona_m_V<-corona$posencourage_corona_V; corona$posencourage_corona_m_V[corona$missing_V=="missing"]<-NA
+corona$coerciveparenting_m_M<-corona$coerciveparenting_M; corona$coerciveparenting_m_M[corona$missing_M=="missing"]<-NA
+corona$coercive_corona_m_M<-corona$coercive_corona_M; corona$coercive_corona_m_M[corona$missing_M=="missing"]<-NA
+corona$coerciveparenting_m_V<-corona$coerciveparenting_V; corona$coerciveparenting_m_V[corona$missing_V=="missing"]<-NA
+corona$coercive_corona_m_V<-corona$coercive_corona_V; corona$coercive_corona_m_V[corona$missing_V=="missing"]<-NA
+corona$parchildrelation_m_M<-corona$parchildrelation_M; corona$parchildrelation_m_M[corona$missing_M=="missing"]<-NA
+corona$parchildrel_corona_m_M<-corona$parchildrel_corona_M; corona$parchildrel_corona_m_M[corona$missing_M=="missing"]<-NA
+corona$parchildrelation_m_V<-corona$parchildrelation_V; corona$parchildrelation_m_V[corona$missing_V=="missing"]<-NA
+corona$parchildrel_corona_m_V<-corona$parchildrel_corona_V; corona$parchildrel_corona_m_V[corona$missing_V=="missing"]<-NA
+
+```
+
+##dataset for men
+```{r}
+men<- corona[c("Nr_G","werkprive_vaderm", "werkprive_vader_coronam", "opleidummyvader", "privewerk_vaderm", "privewerk_vader_coronam", "increase_privewerk_vader", "increase_werkprive_vader", "geboorte", "Werk_uren_compleet_V", "werkurenvader_corona","increase_werkuren_vader", "Werk_uren_compleet_M", "werkurenmoeder_corona","increase_werkuren_moeder","huisvader_corona", "huismoeder_corona", "startstopworking_vader", "startstopworking_moeder","noodopvangbeschikbaar_V", "schoolwerk_uren_vader_corona", "increase_relativeinv_V", "werkurenvader_corona_cats", "werkurenmoeder_corona_cats", "increase_werkuren_vader_imputed", "increase_werkuren_moeder_imputed")]
+men$geslacht<-"man"
+head(men)
+```
+
+#change labels
+```{r}
+library(data.table)
+setnames(men, old = c("Nr_G","werkprive_vaderm", "werkprive_vader_coronam", "opleidummyvader", "privewerk_vaderm", "privewerk_vader_coronam", "increase_privewerk_vader", "increase_werkprive_vader", "geboorte", "Werk_uren_compleet_V", "werkurenvader_corona","increase_werkuren_vader", "Werk_uren_compleet_M", "werkurenmoeder_corona","increase_werkuren_moeder","huisvader_corona", "huismoeder_corona", "startstopworking_vader", "startstopworking_moeder","noodopvangbeschikbaar_V", "schoolwerk_uren_vader_corona", "increase_relativeinv_V", "werkurenvader_corona_cats", "werkurenmoeder_corona_cats", "increase_werkuren_vader_imputed", "increase_werkuren_moeder_imputed", "geslacht"), 
+         new = c("Nr_G",
+                   "werkprive", "werkprive_corona", "opleidummy","privewerk" ,"privewerk_corona"  ,"increase_privewerk",  "increase_werkprive" , "geboorte", "werkuren", "werkuren_corona", "increase_werkuren","werkuren_partner", "werkuren_corona_partner", "increase_werkuren_partner","inactive_corona", "inactive_partner_corona", "startstopworking", "startstopworking_partner","noodopvangbeschikbaar", "schoolwerk_uren_corona", "increase_relativeinv", "werkuren_corona_cats", "werkurenpartner_corona_cats", "increase_werkuren_imputed", "increase_werkuren_partner_imputed", "geslacht" ))
+
+
+head(men)
+```
+
+
+#for mothers
+```{r}
+women<- corona[c("Nr_G","werkprive_moederm", "werkprive_moeder_coronam", "opleidummymoeder", "privewerk_moederm", "privewerk_moeder_coronam", "increase_privewerk_moeder", "increase_werkprive_moeder", "geboorte", "Werk_uren_compleet_M", "werkurenmoeder_corona","increase_werkuren_moeder", "Werk_uren_compleet_V", "werkurenvader_corona","increase_werkuren_vader", "huismoeder_corona","huisvader_corona", "startstopworking_moeder", "startstopworking_vader","noodopvangbeschikbaar_M", "schoolwerk_uren_vader_corona", "increase_relativeinv_M", "werkurenmoeder_corona_cats", "werkurenvader_corona_cats", "increase_werkuren_moeder_imputed", "increase_werkuren_vader_imputed")]
+women$geslacht<-"woman"
+head(women)
+```
+
+#change labels
+```{r}
+library(data.table)
+setnames(women, old = c("Nr_G","werkprive_moederm", "werkprive_moeder_coronam", "opleidummymoeder", "privewerk_moederm", "privewerk_moeder_coronam", "increase_privewerk_moeder", "increase_werkprive_moeder", "geboorte", "Werk_uren_compleet_M", "werkurenmoeder_corona","increase_werkuren_moeder", "Werk_uren_compleet_V", "werkurenvader_corona","increase_werkuren_vader", "huismoeder_corona","huisvader_corona", "startstopworking_moeder", "startstopworking_vader","noodopvangbeschikbaar_M", "schoolwerk_uren_vader_corona", "increase_relativeinv_M", "werkurenmoeder_corona_cats", "werkurenvader_corona_cats", "increase_werkuren_moeder_imputed", "increase_werkuren_vader_imputed", "geslacht" ), 
+         new = c("Nr_G",
+                   "werkprive", "werkprive_corona", "opleidummy","privewerk" ,"privewerk_corona"  ,"increase_privewerk",  "increase_werkprive" , "geboorte","werkuren", "werkuren_corona", "increase_werkuren","werkuren_partner", "werkuren_corona_partner", "increase_werkuren_partner","inactive_corona", "inactive_partner_corona", "startstopworking", "startstopworking_partner","noodopvangbeschikbaar", "schoolwerk_uren_corona", "increase_relativeinv", "werkuren_corona_cats", "werkurenpartner_corona_cats", "increase_werkuren_imputed", "increase_werkuren_partner_imputed", "geslacht"))
+
+head(women)
+```
+
+
+
+##Merge the two dataframes below eachother
+#the ID we can use later for specifying the family level
+```{r}
+coronalong<-rbind(men, women)
+
+
+#Create category:
+coronalong$category<-NA
+coronalong$category[coronalong$opleidummy==0 & coronalong$geslacht=="man"]<-"4.lowman"
+coronalong$category[coronalong$opleidummy==1 & coronalong$geslacht=="man"]<-"3.highmenman"
+coronalong$category[coronalong$opleidummy==0 & coronalong$geslacht=="woman"]<-"2.lowwoman"
+coronalong$category[coronalong$opleidummy==1 & coronalong$geslacht=="woman"]<-"1.highwoman"
+
+coronalong$geslachtbin<-NA
+coronalong$geslachtbin[coronalong$geslacht=="man"]<-1
+coronalong$geslachtbin[coronalong$geslacht=="woman"]<-0
+
+coronalong$opleidummybin<-NA
+coronalong$opleidummybin[coronalong$opleidummy==0]<-1
+coronalong$opleidummybin[coronalong$opleidummy==1]<-0
+
+
+setwd("C:/users/renske/OneDrive - Erasmus University Rotterdam/Documents/3 hoek")
+save(coronalong, file = "coronalong.RData")
+```
+
+
+```{r}
+#rm(list=ls())
+
+#install.packages("lme4")
+library(lme4)
+
+setwd("C:/users/renske/OneDrive - Erasmus University Rotterdam/Documents/3 hoek")
+load("coronalong.RData")
+
+
+head(coronalong)
+```
+
+
+
+##Simple tests
+##WFconflict and increase conflict by education
+```{r}
+tapply(coronalong$privewerk, coronalong$opleidummy,mean, na.rm=T)
+tapply(coronalong$privewerk_corona, coronalong$opleidummy, mean,na.rm=T)
+
+
+tapply(coronalong$increase_privewerk, coronalong$opleidummy, mean, na.rm=T)
+t.test(coronalong$increase_privewerk~coronalong$opleidummy)
+```
+#WFconflcit and increase by education
+```{r}
+
+tapply(coronalong$werkprive, coronalong$opleidummy, mean, na.rm=T)
+tapply(coronalong$werkprive_corona, coronalong$opleidummy, mean,na.rm=T)
+
+tapply(coronalong$increase_werkprive, coronalong$opleidummy, mean, na.rm=T)
+t.test(coronalong$increase_werkprive~coronalong$opleidummy)
+```
+##increase significant for high vs lower educated
+```{r}
+coronalonglaag<-subset(coronalong, opleidummy==0)
+coronalonghoog<-subset(coronalong, opleidummy==1)
+
+t.test(coronalonghoog$werkprive,coronalonghoog$werkprive_corona)
+
+t.test(coronalonglaag$werkprive,coronalonglaag$werkprive_corona)
+
+
+t.test(coronalonghoog$privewerk,coronalonghoog$privewerk_corona)
+
+t.test(coronalonglaag$privewerk,coronalonglaag$privewerk_corona)
+
+```
+##Increase different for the four groups? 
+```{r}
+
+#anova<-(lm(increase_privewerk~category+geboorte, data=coronalong))
+#summary(anova)
+mmodel0<-lmer(increase_privewerk~(1|Nr_G), data=coronalong)
+summary(mmodel0)
+
+
+##nu met imputed werkuren:
+mmodel1b<-lmer(increase_privewerk~opleidummybin+ geslachtbin +geboorte +increase_werkuren_imputed + increase_werkuren_partner_imputed+ (1|Nr_G), data=coronalong)
+summary(mmodel1b)
+
+
+#mmodel<-lmer(increase_privewerk~category+geboorte +(1|Nr_G), data=coronalong)
+#summary(mmodel)
+```
+```{r}
+#anova<-(lm(increase_werkprive~category+geboorte, data=coronalong))
+#summary(anova)
+mmodel00<-lmer(increase_werkprive~(1|Nr_G), data=coronalong)
+summary(mmodel00)
+
+##met imputed werkuren
+mmodel11b<-lmer(increase_werkprive~opleidummybin+ geslachtbin +geboorte +increase_werkuren_imputed + increase_werkuren_partner_imputed+(1|Nr_G), data=coronalong)
+summary(mmodel11b)
+
+
+```
+
+###R2 of these multilevel models 
+```{r}
+
+#privewerk
+1-logLik(mmodel1)/logLik(mmodel0)
+
+#werkprive
+1-logLik(mmodel11)/logLik(mmodel00)
+```
+
+##Extra controls
+
+
+##Increase different for the four groups? 
+```{r}
+#anova<-(lm(increase_privewerk~category+geboorte, data=coronalong))
+#summary(anova)
+mmodel0<-lmer(increase_privewerk~(1|Nr_G), data=coronalong)
+summary(mmodel0)
+
+
+
+mmodel3<-lmer(increase_privewerk~opleidummybin+ geslachtbin +geboorte+increase_werkuren+ increase_werkuren_partner +noodopvangbeschikbaar+ (1|Nr_G), data=coronalong)
+summary(mmodel3)
+
+mmodel4<-lmer(increase_privewerk~opleidummybin+ geslachtbin +geboorte+increase_werkuren+ increase_werkuren_partner + increase_relativeinv+ (1|Nr_G), data=coronalong)
+summary(mmodel4)
+
+
+
+
+```
+
+```{r}
+#anova<-(lm(increase_werkprive~category+geboorte, data=coronalong))
+#summary(anova)
+
+mmodel00<-lmer(increase_werkprive~(1|Nr_G), data=coronalong)
+summary(mmodel00)
+
+
+
+mmodel33<-lmer(increase_werkprive~opleidummybin+ geslachtbin +geboorte +increase_werkuren+increase_werkuren_partner+noodopvangbeschikbaar+(1|Nr_G), data=coronalong)
+summary(mmodel33)
+
+mmodel44<-lmer(increase_werkprive~opleidummybin+ geslachtbin +geboorte +increase_werkuren+increase_werkuren_partner+increase_relativeinv+(1|Nr_G), data=coronalong)
+summary(mmodel44)
+
+
+```
+
+```{r}
+
+#3 is noodopvang
+#4 is relative involvement 
+
+#privewerk
+1-logLik(mmodel3)/logLik(mmodel0)
+1-logLik(mmodel4)/logLik(mmodel0)
+
+#werkprive
+1-logLik(mmodel33)/logLik(mmodel00)
+1-logLik(mmodel44)/logLik(mmodel00)
+```
+

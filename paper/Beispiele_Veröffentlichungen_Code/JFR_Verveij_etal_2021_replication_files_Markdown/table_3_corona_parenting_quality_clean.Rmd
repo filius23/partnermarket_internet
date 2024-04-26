@@ -1,0 +1,1504 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+rm(list=ls())
+
+setwd("C:/users/Renske/OneDrive - Erasmus University Rotterdam/Documents/3 hoek")
+load("corona.RData")
+
+#install.packages("ggplot2")
+library(ggplot2)
+
+#install.packages("namespace", dependencies = T)
+library(namespace)
+
+#install.packages("rlang", dependencies = T)
+library(rlang)
+
+#install.packages("ggpubr", dependencies = T)
+library(ggpubr)
+
+options(max.print=1000000)
+#names(corona)
+
+#install.packages("DescTools", dependencies = T)
+library(DescTools)
+
+install.packages("multilevelTools")
+library(multilevelTools)
+
+library(lmerTest)
+```
+
+
+
+##Positive encouragement: hugging, kissing, attention etcetera when child does something good
+##Simple t-test
+```{r}
+
+##mothers have became a bit less encouraging, but not a lot
+mean(corona$positiveEncouragement_m_M, na.rm=T)
+mean(corona$posencourage_corona_m_M, na.rm=T)
+t.test(corona$positiveEncouragement_m_M,corona$posencourage_corona_m_M, paired=T)
+
+##fathers have became a bit less encouraging, but not a lot
+mean(corona$positiveEncouragement_m_V, na.rm=T)
+mean(corona$posencourage_corona_m_V, na.rm=T)
+t.test(corona$positiveEncouragement_m_V,corona$posencourage_corona_m_V, paired=T)
+
+```
+##Coerciveness: dwingend: schuldgevoel, schreeuwn, slaan, geiiriteerd
+##simple t-tes
+```{r}
+
+##mothers have became a tiny bit more coersive, but not significantly 
+mean(corona$coerciveparenting_m_M, na.rm=T)
+mean(corona$coercive_corona_m_M, na.rm=T)
+t.test(corona$coerciveparenting_m_M,corona$coercive_corona_m_M, paired=T)
+
+##fathers have became a tiny bit more coersive, but not significantly 
+mean(corona$coerciveparenting_m_V, na.rm=T)
+mean(corona$coercive_corona_m_V, na.rm=T)
+t.test(corona$coerciveparenting_m_V,corona$coercive_corona_m_V, paired=T)
+```
+##parent child relation: enjoy hugging, talking, having a good relation
+##simple t-test
+```{r}
+
+##mothers have became bit less warm in their rela, significntly
+mean(corona$parchildrelation_m_M, na.rm=T)
+mean(corona$parchildrel_corona_m_M, na.rm=T)
+t.test(corona$parchildrelation_m_M,corona$parchildrel_corona_m_M, paired=T)
+
+##fathers have became a tiny bit less warm, not sigificant 
+mean(corona$parchildrelation_m_V, na.rm=T)
+mean(corona$parchildrel_corona_m_V, na.rm=T)
+t.test(corona$parchildrelation_m_V,corona$parchildrel_corona_m_V, paired=T)
+```
+
+```{r}
+##Make a nice figure for this with only people in both waves WFC
+gender<-c("mothers","mothers","fathers","fathers","mothers","mothers","fathers","fathers","mothers","mothers","fathers","fathers")
+Parenting<-c("Encouragement", "Encouragement","Encouragement", "Encouragement","Coerciveness", "Coerciveness","Coerciveness", "Coerciveness",
+             "Relationship", "Relationship","Relationship", "Relationship")
+Wave<-c("wave 1","covid-19 wave", "wave 1", "covid-19 wave","wave 1","covid-19 wave", "wave 1", "covid-19 wave", "wave 1", "covid-19 wave", "wave 1", "covid-19 wave")
+selfreportedquality<-c(3.09, 3.07, 3.01,2.97, 1.54, 1.59, 1.53, 1.56, 3.89, 3.81, 3.76, 3.72)
+significant<-c("", "","","","+","","","","**","","","")
+
+
+data1<-data.frame(Parenting, gender, selfreportedquality, significant, Wave)
+
+order_wave<-c("wave 1", "covid-19 wave")
+data1$Wave<-factor(data1$Wave, levels=order_wave)
+
+order_gender<-c("mothers", "fathers")
+data1$gender<-factor(data1$gender, levels=order_gender)
+
+order_par<-c("Encouragement", "Coerciveness","Relationship" )
+data1$Parenting<-factor(data1$Parenting, levels=order_par)
+
+plot<-ggplot(data1, aes(x=Parenting, y=selfreportedquality,group=Wave, fill=Wave ))+
+  geom_bar(stat='identity', position='dodge')+
+  geom_text(aes(x=Parenting, y=selfreportedquality, label=significant), hjust=-0.2, angle=90)+
+  facet_wrap(~gender)+
+  labs(y= "Self-reported quality")+
+coord_cartesian(ylim = c(1, 4)) +
+scale_y_continuous(breaks = c(1:4))+
+  theme(axis.text.x = element_text(angle=45, hjust=1))
+plot
+
+```
+
+##conclusion: it all decreased a little bit 
+
+
+
+###Step3:parenting and werkprive conflict 
+
+##Descriptives
+
+###relation with WFC wave 1 mothers
+#Nee
+```{r}
+cor.test(corona$werkprive_moeder,corona$parchildrelation_m_M)   ##Negative??
+cor.test(corona$werkprive_moeder,corona$coerciveparenting_m_M)      ##positive??
+cor.test(corona$werkprive_moeder,corona$positiveEncouragement_m_M)  ##negative??
+##NO relation before corona
+
+```
+
+
+##relation with WFC wave 2 mothers 
+#werkprive not 
+```{r}
+cor.test(corona$werkprive_moeder_corona,corona$parchildrel_corona_m_M) 
+cor.test(corona$werkprive_moeder_corona,corona$coercive_corona_m_M) 
+cor.test(corona$werkprive_moeder_corona,corona$posencourage_corona_m_M) 
+#cor.test(corona$werkprive_moeder_corona,corona$consistency_corona_m_M) 
+```
+
+
+
+##plot this
+```{r}
+graph1 <- ggplot(corona, aes(x = werkprive_moeder, y = parchildrelation_m_M)) +
+  geom_jitter(height = 0.02, width = 0.02) +
+  ggtitle("Mothers: Wave 1")+
+  geom_smooth(method=lm)+
+  theme_bw()+
+  labs(y= "parent-child rela", x= "work-to-family conflict")+
+  scale_x_continuous(limits=c(0,7.2))+ 
+  geom_text(x=6.5, y=3.75, label="r= -0.17")
+
+graph2 <- ggplot(corona, aes(x = werkprive_moeder_corona, y = parchildrel_corona_m_M)) +
+  geom_jitter(height = 0.02, width = 0.02) +
+  ggtitle("Covid-19 wave")+
+  geom_smooth(method=lm)+
+  theme_bw()+
+  labs(y= "parent-child rela", x= "work-to-family conflict")+
+  scale_x_continuous(limits=c(0,7.2))+ 
+  geom_text(x=6.5, y=3.75, label="r= -0.17")
+
+
+figure <- ggarrange(graph1, graph2,
+                    labels = c("", ""),
+                    ncol = 1, nrow = 2)
+figure
+```
+
+```{r}
+graph3 <- ggplot(corona, aes(x = werkprive_moeder, y = coerciveparenting_m_M)) +
+  geom_jitter(height = 0.02, width = 0.02) +
+  ggtitle("Wave 1")+
+  geom_smooth(method=lm)+
+  theme_bw()+
+  labs(y= "coercive parenting", x= "work-to-family conflict")+
+  scale_x_continuous(limits=c(0,7.2))+
+  scale_y_continuous(limits=c(1,2.5))+ 
+  geom_text(x=6.5, y=2, label="r= 0.13")
+
+graph4 <- ggplot(corona, aes(x = werkprive_moeder_corona, y = coercive_corona_m_M)) +
+  geom_jitter(height = 0.02, width = 0.02) +
+  ggtitle("Covid-19 wave")+
+  geom_smooth(method=lm)+
+  theme_bw()+
+  labs(y= "coercive parenting", x= "work-to-family conflict")+
+  scale_x_continuous(limits=c(0,7.2))+
+  scale_y_continuous(limits=c(1,2.5))+ 
+  geom_text(x=6.5, y=2, label="r= 0.08")
+
+figure <- ggarrange(graph3, graph4,
+                    labels = c("", ""),
+                    ncol = 1, nrow = 2)
+figure
+```
+
+
+```{r}
+graph5 <- ggplot(corona, aes(x = werkprive_moeder, y = positiveEncouragement_m_M)) +
+  geom_jitter(height = 0.02, width = 0.02) +
+  ggtitle("Wave 1")+
+  geom_smooth(method=lm)+
+  theme_bw()+
+  labs(y= "postive encouragement ", x= "work-to-family conflict")+
+  scale_x_continuous(limits=c(0,7.2))+
+  scale_y_continuous(limits=c(1,4))+ 
+  geom_text(x=6.5, y=3.75, label="r= 0.10")
+
+graph6 <- ggplot(corona, aes(x = werkprive_moeder_corona, y = posencourage_corona_m_M)) +
+  geom_jitter(height = 0.02, width = 0.02) +
+  ggtitle("Covid-19 wave")+
+  geom_smooth(method=lm)+
+  theme_bw()+
+  labs(y= "postive encouragement ", x= "work-to-family conflict")+
+  scale_x_continuous(limits=c(0,7.2))+
+  scale_y_continuous(limits=c(1,4))+ 
+  geom_text(x=6.5, y=3.75, label="r= -0.01")
+
+
+figure <- ggarrange(graph5, graph6,
+                    labels = c("", ""),
+                    ncol = 1, nrow = 2)
+figure
+
+```
+
+
+```{r}
+figure <- ggarrange(graph1, graph3,graph5, graph2,graph4, graph6,
+                    labels = c("", ""),
+                    ncol = 3, nrow = 2)
+figure
+```
+
+
+#Relationship WFC fathers wave 1
+#een beetje 
+```{r}
+cor.test(corona$werkprive_vader,corona$parchildrelation_m_V)   ##Negative??
+cor.test(corona$werkprive_vader,corona$coerciveparenting_m_V)      ##positive??
+cor.test(corona$werkprive_vader,corona$positiveEncouragement_m_V)  ##negative??
+##NO relation before corona
+```
+
+
+##relationship WFC fathers wave 2
+
+
+```{r}
+cor.test(corona$werkprive_vader_corona,corona$parchildrel_corona_m_V) 
+cor.test(corona$werkprive_vader_corona,corona$coercive_corona_m_V) 
+cor.test(corona$werkprive_vader_corona,corona$posencourage_corona_m_V) 
+```
+
+
+
+##plot this
+```{r}
+graph7 <- ggplot(corona, aes(x = werkprive_vader, y = parchildrelation_m_V)) +
+  geom_jitter(height = 0.02, width = 0.02) +
+  ggtitle("Fathers: Wave 1")+
+  geom_smooth(method=lm)+
+  theme_bw()+
+  labs(y= "parent-child rela", x= "work-to-family conflict")+
+  scale_x_continuous(limits=c(0,7.2))+ 
+  geom_text(x=6.5, y=3.75, label="r= -0.18")
+
+graph8 <- ggplot(corona, aes(x = werkprive_vader_corona, y = parchildrel_corona_m_V)) +
+  geom_jitter(height = 0.02, width = 0.02) +
+  ggtitle("Covid-19 wave")+
+  geom_smooth(method=lm)+
+  theme_bw()+
+  labs(y= "parent-child rela", x= "work-to-family conflict")+
+  scale_x_continuous(limits=c(0,7.2))+ 
+  geom_text(x=6.5, y=3.75, label="r= -0.47***")
+
+
+figure <- ggarrange(graph7, graph8,
+                    labels = c("", ""),
+                    ncol = 1, nrow = 2)
+figure
+```
+
+```{r}
+graph9 <- ggplot(corona, aes(x = werkprive_vader, y = coerciveparenting_m_V)) +
+  geom_jitter(height = 0.02, width = 0.02) +
+  ggtitle("Wave 1")+
+  geom_smooth(method=lm)+
+  theme_bw()+
+  labs(y= "coercive parenting", x= "work-to-family conflict")+
+  scale_x_continuous(limits=c(0,7.2))+
+  scale_y_continuous(limits=c(1,2.5))+ 
+  geom_text(x=6.5, y=2, label="r= 0.11")
+
+graph10 <- ggplot(corona, aes(x = werkprive_vader_corona, y = coercive_corona_m_V)) +
+  geom_jitter(height = 0.02, width = 0.02) +
+  ggtitle("Covid-19 wave")+
+  geom_smooth(method=lm)+
+  theme_bw()+
+  labs(y= "coercive parenting", x= "work-to-family conflict")+
+  scale_x_continuous(limits=c(0,7.2))+
+  scale_y_continuous(limits=c(1,2.5))+ 
+  geom_text(x=6.5, y=2, label="r= 0.22+")
+
+figure <- ggarrange(graph9, graph10,
+                    labels = c("", ""),
+                    ncol = 1, nrow = 2)
+figure
+```
+
+
+```{r}
+graph11 <- ggplot(corona, aes(x = werkprive_vader, y = positiveEncouragement_m_V)) +
+  geom_jitter(height = 0.02, width = 0.02) +
+  ggtitle("Wave 1")+
+  geom_smooth(method=lm)+
+  theme_bw()+
+  labs(y= "postive encouragement ", x= "work-to-family conflict")+
+  scale_x_continuous(limits=c(0,7.2))+
+  scale_y_continuous(limits=c(1,4))+ 
+  geom_text(x=6.5, y=3.75, label="r= 0.25*")
+
+graph12 <- ggplot(corona, aes(x = werkprive_vader_corona, y = posencourage_corona_m_V)) +
+  geom_jitter(height = 0.02, width = 0.02) +
+  ggtitle("Covid-19 wave")+
+  geom_smooth(method=lm)+
+  theme_bw()+
+  labs(y= "postive encouragement ", x= "work-to-family conflict")+
+  scale_x_continuous(limits=c(0,7.2))+
+  scale_y_continuous(limits=c(1,4))+ 
+  geom_text(x=6.5, y=3.75, label="r= 0.01")
+
+
+figure <- ggarrange(graph11, graph12,
+                    labels = c("", ""),
+                    ncol = 1, nrow = 2)
+figure
+
+```
+
+```{r}
+figure <- ggarrange(graph7, graph9,graph11, graph8,graph10, graph12,
+                    labels = c("", ""),
+                    ncol = 3, nrow = 2)
+figure
+
+```
+
+
+#mannen en vrouwen samen? 
+
+
+
+######################################################3
+###Step3:parenting and privewerk conflict 
+
+##Descriptives
+
+###FWC parenting mothers wave 1
+#Nee
+```{r}
+cor.test(corona$privewerk_moeder,corona$parchildrelation_m_M)   ##Negative??
+cor.test(corona$privewerk_moeder,corona$coerciveparenting_m_M)      ##positive??
+cor.test(corona$privewerk_moeder,corona$positiveEncouragement_m_M)  ##negative??
+##NO relation before corona
+
+```
+
+
+##FWC mothers wave 2
+#yes
+```{r}
+cor.test(corona$privewerk_moeder_corona,corona$parchildrel_corona_m_M) 
+cor.test(corona$privewerk_moeder_corona,corona$coercive_corona_m_M) 
+cor.test(corona$privewerk_moeder_corona,corona$posencourage_corona_m_M) 
+#cor.test(corona$privewerk_moeder_corona,corona$consistency_corona_m_M) 
+```
+
+
+##plot this
+
+```{r}
+graph13 <- ggplot(corona, aes(x = privewerk_moeder, y = parchildrelation_m_M)) +
+  geom_jitter(height = 0.02, width = 0.02) +
+  ggtitle("Mothers: Wave 1")+
+  geom_smooth(method=lm)+
+  theme_bw()+
+  labs(y= "parent-child rela", x= "family-to-work conflict")+
+  scale_x_continuous(limits=c(0,7.2))+ 
+  geom_text(x=6.5, y=3.75, label="r= -0.36**")
+
+graph14 <- ggplot(corona, aes(x = privewerk_moeder_corona, y = parchildrel_corona_m_M)) +
+  geom_jitter(height = 0.02, width = 0.02) +
+  ggtitle("Covid-19 wave")+
+  geom_smooth(method=lm)+
+  theme_bw()+
+  labs(y= "parent-child rela", x= "family-to-work conflict")+
+  scale_x_continuous(limits=c(0,7.2))+ 
+  geom_text(x=6.5, y=3.75, label="r= -0.17")
+
+
+figure <- ggarrange(graph13, graph14,
+                    labels = c("", ""),
+                    ncol = 1, nrow = 2)
+figure
+```
+
+```{r}
+graph15 <- ggplot(corona, aes(x = privewerk_moeder, y = coerciveparenting_m_M)) +
+  geom_jitter(height = 0.02, width = 0.02) +
+  ggtitle("Wave 1")+
+  geom_smooth(method=lm)+
+  theme_bw()+
+  labs(y= "coercive parenting", x= "family-to-work conflict")+
+  scale_x_continuous(limits=c(0,7.2))+
+  scale_y_continuous(limits=c(1,2.5))+ 
+  geom_text(x=6.5, y=2, label="r= 0.33**")
+
+graph16 <- ggplot(corona, aes(x = privewerk_moeder_corona, y = coercive_corona_m_M)) +
+  geom_jitter(height = 0.02, width = 0.02) +
+  ggtitle("Covid-19 wave")+
+  geom_smooth(method=lm)+
+  theme_bw()+
+  labs(y= "coercive parenting", x= "family-to-work conflict")+
+  scale_x_continuous(limits=c(0,7.2))+
+  scale_y_continuous(limits=c(1,2.5))+ 
+  geom_text(x=6.5, y=2, label="r= 0.30*")
+
+figure <- ggarrange(graph15, graph16,
+                    labels = c("", ""),
+                    ncol = 1, nrow = 2)
+figure
+```
+
+
+```{r}
+graph17 <- ggplot(corona, aes(x = privewerk_moeder, y = positiveEncouragement_m_M)) +
+  geom_jitter(height = 0.02, width = 0.02) +
+  ggtitle("Wave 1")+
+  geom_smooth(method=lm)+
+  theme_bw()+
+  labs(y= "postive encouragement ", x= "family-to-work conflict")+
+  scale_x_continuous(limits=c(0,7.2))+
+  scale_y_continuous(limits=c(1,4))+ 
+  geom_text(x=6.5, y=3.75, label="r= -0.01")
+
+graph18 <- ggplot(corona, aes(x = privewerk_moeder_corona, y = posencourage_corona_m_M)) +
+  geom_jitter(height = 0.02, width = 0.02) +
+  ggtitle("Covid-19 wave")+
+  geom_smooth(method=lm)+
+  theme_bw()+
+  labs(y= "postive encouragement ", x= "family-to-work conflict")+
+  scale_x_continuous(limits=c(0,7.2))+
+  scale_y_continuous(limits=c(1,4))+ 
+  geom_text(x=6.5, y=3.75, label="r= -0.05")
+
+
+figure <- ggarrange(graph17, graph18,
+                    labels = c("", ""),
+                    ncol = 1, nrow = 2)
+figure
+
+```
+
+```{r}
+figure <- ggarrange(graph13, graph15,graph17, graph14,graph16, graph18,
+                    labels = c("", ""),
+                    ncol = 3, nrow = 2)
+figure
+
+```
+
+
+#FWC fathers wave 1
+#een beetje 
+```{r}
+cor.test(corona$privewerk_vader,corona$parchildrelation_m_V)   ##Negative??
+cor.test(corona$privewerk_vader,corona$coerciveparenting_m_V)      ##positive??
+cor.test(corona$privewerk_vader,corona$positiveEncouragement_m_V)  ##negative??
+##NO relation before corona
+```
+
+
+##FWC fathers wave 2
+
+
+```{r}
+cor.test(corona$privewerk_vader_corona,corona$parchildrel_corona_m_V) 
+cor.test(corona$privewerk_vader_corona,corona$coercive_corona_m_V) 
+cor.test(corona$privewerk_vader_corona,corona$posencourage_corona_m_V) 
+#cor.test(corona$privewerk_vader_corona,corona$consistency_corona_m_V) 
+```
+
+
+##plot this
+
+```{r}
+graph19 <- ggplot(corona, aes(x = privewerk_vader, y = parchildrelation_m_V)) +
+  geom_jitter(height = 0.02, width = 0.02) +
+  ggtitle("Fathers: Wave 1")+
+  geom_smooth(method=lm)+
+  theme_bw()+
+  labs(y= "parent-child rela", x= "family-to-work conflict")+
+  scale_x_continuous(limits=c(0,7.2))+ 
+  geom_text(x=6.5, y=3.75, label="r= -0.30**")
+
+graph20 <- ggplot(corona, aes(x = privewerk_vader_corona, y = parchildrel_corona_m_V)) +
+  geom_jitter(height = 0.02, width = 0.02) +
+  ggtitle("Covid-19 wave")+
+  geom_smooth(method=lm)+
+  theme_bw()+
+  labs(y= "parent-child rela", x= "family-to-work conflict")+
+  scale_x_continuous(limits=c(0,7.2))+ 
+  geom_text(x=6.5, y=3.75, label="r= -0.29**")
+
+
+figure <- ggarrange(graph19, graph20,
+                    labels = c("", ""),
+                    ncol = 1, nrow = 2)
+figure
+```
+
+```{r}
+graph21 <- ggplot(corona, aes(x = privewerk_vader, y = coerciveparenting_m_V)) +
+  geom_jitter(height = 0.02, width = 0.02) +
+  ggtitle("Wave 1")+
+  geom_smooth(method=lm)+
+  theme_bw()+
+  labs(y= "coercive parenting", x= "family-to-work conflict")+
+  scale_x_continuous(limits=c(0,7.2))+
+  scale_y_continuous(limits=c(1,2.5))+ 
+  geom_text(x=6.5, y=2, label="r= 0.18")
+
+graph22 <- ggplot(corona, aes(x = privewerk_vader_corona, y = coercive_corona_m_V)) +
+  geom_jitter(height = 0.02, width = 0.02) +
+  ggtitle("Covid-19 wave")+
+  geom_smooth(method=lm)+
+  theme_bw()+
+  labs(y= "coercive parenting", x= "family-to-work conflict")+
+  scale_x_continuous(limits=c(0,7.2))+
+  scale_y_continuous(limits=c(1,2.5))+ 
+  geom_text(x=6.5, y=2, label="r= 0.14")
+
+figure <- ggarrange(graph21, graph22,
+                    labels = c("", ""),
+                    ncol = 1, nrow = 2)
+figure
+```
+
+
+```{r}
+graph23 <- ggplot(corona, aes(x = privewerk_vader, y = positiveEncouragement_m_V)) +
+  geom_jitter(height = 0.02, width = 0.02) +
+  ggtitle("Wave 1")+
+  geom_smooth(method=lm)+
+  theme_bw()+
+  labs(y= "postive encouragement ", x= "family-to-work conflict")+
+  scale_x_continuous(limits=c(0,7.2))+
+  scale_y_continuous(limits=c(1,4))+ 
+  geom_text(x=6.5, y=3.75, label="r= -0.07")
+
+graph24 <- ggplot(corona, aes(x = privewerk_vader_corona, y = posencourage_corona_m_V)) +
+  geom_jitter(height = 0.02, width = 0.02) +
+  ggtitle("Covid-19 wave")+
+  geom_smooth(method=lm)+
+  theme_bw()+
+  labs(y= "postive encouragement ", x= "family-to-work conflict")+
+  scale_x_continuous(limits=c(0,7.2))+
+  scale_y_continuous(limits=c(1,4))+ 
+  geom_text(x=6.5, y=3.75, label="r= -0.06")
+
+
+figure <- ggarrange(graph23, graph24,
+                    labels = c("", ""),
+                    ncol = 1, nrow = 2)
+figure
+
+```
+
+```{r}
+figure <- ggarrange(graph19, graph21,graph23, graph20,graph22, graph24,
+                    labels = c("", ""),
+                    ncol = 3, nrow = 2)
+figure
+
+```
+
+
+
+
+##Three level model of measurements nested within individuals, and individuals nested within households
+##http://alexanderdemos.org/Mixed5.html
+
+##Dateframe for mothers
+```{r}
+
+##workfamily conflict, family work conflict, education, youngersibling, parenting 123
+myvars <- c("Nr_G", "opleidummymoeder", "werkprive_moederm", "privewerk_moederm", "jongerzwoertje","coerciveparenting_M","positiveEncouragement_M","parchildrelation_M")
+wave1m <- corona[myvars]
+
+wave1m$ID<-wave1m$Nr_G
+wave1m$wave<-"first"
+wave1m$opleiding <- wave1m$opleidummymoeder
+wave1m$werkprive <- wave1m$werkprive_moederm
+wave1m$privewerk <- wave1m$privewerk_moederm
+wave1m$jongerzwoertje <- wave1m$jongerzwoertje
+wave1m$coersive <- wave1m$coerciveparenting_M
+wave1m$encourage <- wave1m$positiveEncouragement_M
+wave1m$relation <- wave1m$parchildrelation_M
+
+myvars <- c("ID", "wave","opleiding", "werkprive", "privewerk", "jongerzwoertje","coersive","encourage","relation")
+wave1m <- wave1m[myvars]
+```
+
+
+
+```{r}
+##workfamily conflict, family work conflict, education, youngersibling, parenting 123
+myvars <- c("Nr_G", "opleidummymoeder", "werkprive_moeder_coronam", "privewerk_moeder_coronam", "jongerzwoertje_corona","coercive_corona_M","posencourage_corona_M","parchildrel_corona_M")
+coronawave <- corona[myvars]
+
+coronawave$ID<-coronawave$Nr_G
+coronawave$wave<-"corona"
+coronawave$opleiding <- coronawave$opleidummymoeder
+coronawave$werkprive <- coronawave$werkprive_moeder_coronam
+coronawave$privewerk <- coronawave$privewerk_moeder_coronam
+coronawave$jongerzwoertje <- coronawave$jongerzwoertje_corona
+coronawave$coersive <- coronawave$coercive_corona_M
+coronawave$encourage <- coronawave$posencourage_corona_M
+coronawave$relation <- coronawave$parchildrel_corona_M
+
+myvars <- c("ID", "wave","opleiding", "werkprive", "privewerk", "jongerzwoertje","coersive","encourage","relation")
+coronawave <- coronawave[myvars]
+
+```
+
+
+```{r}
+mothers<-rbind(wave1m, coronawave)
+head(mothers)
+```
+```{r}
+
+##workfamily conflict, family work conflict, education, youngersibling, parenting 123
+myvars <- c("Nr_G", "opleidummyvader", "werkprive_vaderm", "privewerk_vaderm", "jongerzwoertje","coerciveparenting_V","positiveEncouragement_V","parchildrelation_V")
+wave1v <- corona[myvars]
+
+wave1v$ID<-wave1v$Nr_G
+wave1v$wave<-"first"
+wave1v$opleiding <- wave1v$opleidummyvader
+wave1v$werkprive <- wave1v$werkprive_vaderm
+wave1v$privewerk <- wave1v$privewerk_vaderm
+wave1v$jongerzwoertje <- wave1v$jongerzwoertje
+wave1v$coersive <- wave1v$coerciveparenting_V
+wave1v$encourage <- wave1v$positiveEncouragement_V
+wave1v$relation <- wave1v$parchildrelation_V
+
+myvars <- c("ID", "wave","opleiding", "werkprive", "privewerk", "jongerzwoertje","coersive","encourage","relation")
+wave1v <- wave1v[myvars]
+```
+
+
+
+```{r}
+##workfamily conflict, family work conflict, education, youngersibling, parenting 123
+myvars <- c("Nr_G", "opleidummyvader", "werkprive_vader_coronam", "privewerk_vader_coronam", "jongerzwoertje_corona","coercive_corona_V","posencourage_corona_V","parchildrel_corona_V")
+coronawavev <- corona[myvars]
+
+coronawavev$ID<-coronawavev$Nr_G
+coronawavev$wave<-"corona"
+coronawavev$opleiding <- coronawavev$opleidummyvader
+coronawavev$werkprive <- coronawavev$werkprive_vader_coronam
+coronawavev$privewerk <- coronawavev$privewerk_vader_coronam
+coronawavev$jongerzwoertje <- coronawavev$jongerzwoertje_corona
+coronawavev$coersive <- coronawavev$coercive_corona_V
+coronawavev$encourage <- coronawavev$posencourage_corona_V
+coronawavev$relation <- coronawavev$parchildrel_corona_V
+
+myvars <- c("ID", "wave","opleiding", "werkprive", "privewerk", "jongerzwoertje","coersive","encourage","relation")
+coronawavev <- coronawavev[myvars]
+
+```
+
+
+```{r}
+fathers<-rbind(wave1v, coronawavev)
+```
+
+```{r}
+fathers$geslacht<-"father" 
+mothers$geslacht<-"mother" 
+
+fathers$inidvidualID<-paste("V",fathers$ID, sep="")
+mothers$inidvidualID<-paste("M",mothers$ID, sep="")
+
+parents<-rbind(fathers, mothers)
+
+
+parents$waver<-parents$wave
+parents$waver[parents$wave=="first"]<-"1.first"
+parents$waver[parents$wave=="corona"]<-"2.corona"
+  table(parents$waver)
+```
+
+###positive encouragement
+```{r}
+wave1vs<-wave1v[-c(21, 80, 71 ),]
+coronawavevs<-coronawavev[-c(89,80 ,82 ,93 , 54),]
+fatherss<-rbind(wave1vs, coronawavevs)
+
+wave1ms<-wave1m[-c( 34,74 , 77, 16, 56, 57 ),]
+coronawaves<-coronawave[-c( 13 ),]
+motherss<-rbind(wave1ms, coronawaves)
+
+
+fatherss$geslacht<-"father" 
+motherss$geslacht<-"mother" 
+
+fatherss$inidvidualID<-paste("V",fatherss$ID, sep="")
+motherss$inidvidualID<-paste("M",motherss$ID, sep="")
+
+parents<-rbind(fatherss, motherss)
+
+
+parents$waver<-parents$wave
+parents$waver[parents$wave=="first"]<-"1.first"
+parents$waver[parents$wave=="corona"]<-"2.corona"
+  table(parents$waver)
+
+mmodele0<-lmer(encourage~(1|ID)+ (1|ID:inidvidualID), data=parents)
+
+mmodele1<-lmer(encourage~werkprive+privewerk +waver+ opleiding+ jongerzwoertje +geslacht+ (1|ID)+ (1|ID:inidvidualID), data=parents)
+summary(mmodele1)
+
+mmodele2<-lmer(encourage~werkprive*waver+privewerk*waver +opleiding+ jongerzwoertje +geslacht+(1|ID)+ (1|ID:inidvidualID), data=parents)
+summary(mmodele2)
+
+#mmodele2<-lmer(encourage~werkprive*wave*geslacht +privewerk*wave*geslacht +opleiding+ jongerzwoertje +(1|ID)+ (1|ID:inidvidualID), data=parents)
+#summary(mmodele2)
+
+r.squaredGLMM(mmodele1) 
+r.squaredGLMM(mmodele2)
+```
+###coersive parenting
+```{r}
+
+wave1vs<-wave1v[-c(17,71 ,82 ),]
+coronawavevs<-coronawavev[-c(96,80 , 17, 54),]
+fatherss<-rbind(wave1vs, coronawavevs)
+
+wave1ms<-wave1m[-c(20 ,6 , 70, 56 ),]
+coronawaves<-coronawave[-c( 90,20 ),]
+motherss<-rbind(wave1ms, coronawaves)
+
+
+fatherss$geslacht<-"father" 
+motherss$geslacht<-"mother" 
+
+fatherss$inidvidualID<-paste("V",fatherss$ID, sep="")
+motherss$inidvidualID<-paste("M",motherss$ID, sep="")
+
+parents<-rbind(fatherss, motherss)
+
+
+parents$waver<-parents$wave
+parents$waver[parents$wave=="first"]<-"1.first"
+parents$waver[parents$wave=="corona"]<-"2.corona"
+  table(parents$waver)
+
+mmodelc0<-lmer(coersive~ (1|ID)+ (1|ID:inidvidualID), data=parents)
+
+
+mmodelc1<-lmer(coersive~werkprive+privewerk+ waver+opleiding+ jongerzwoertje + geslacht+ (1|ID)+ (1|ID:inidvidualID), data=parents)
+summary(mmodelc1)
+
+
+mmodelc2<-lmer(coersive~werkprive*waver +privewerk*waver +opleiding+ jongerzwoertje + geslacht+ (1|ID)+ (1|ID:inidvidualID), data=parents)
+summary(mmodelc2)
+
+#mmodelc2<-lmer(coersive~werkprive*wave*geslacht+ privewerk*wave*geslacht +opleiding+ jongerzwoertje +(1|ID)+ (1|ID:inidvidualID), data=parents)
+#summary(mmodelc2)
+
+r.squaredGLMM(mmodelc1) 
+r.squaredGLMM(mmodelc2)
+
+```
+
+
+
+
+###Parent child relationship quality
+```{r}
+wave1vs<-wave1v[-c( 4, 79,92,56  ),]
+coronawavevs<-coronawavev[-c( 92, 64, 90),]
+motherss<-rbind(wave1vs, coronawavevs)
+
+wave1ms<-wave1m[-c( 21, 10, 91, 7, 71),]
+coronawaves<-coronawave[-c(89,80 ,57, 17, 7, 54),]
+fatherss<-rbind(wave1ms, coronawaves)
+
+fatherss$geslacht<-"father" 
+motherss$geslacht<-"mother" 
+
+fatherss$inidvidualID<-paste("V",fatherss$ID, sep="")
+motherss$inidvidualID<-paste("M",motherss$ID, sep="")
+
+parents<-rbind(fatherss, motherss)
+
+
+parents$waver<-parents$wave
+parents$waver[parents$wave=="first"]<-"1.first"
+parents$waver[parents$wave=="corona"]<-"2.corona"
+  table(parents$waver)
+
+mmodelr0<-lmer(relation~(1|ID)+ (1|ID:inidvidualID), data=parents)
+
+mmodelr1<-lmer(relation~werkprive+privewerk +waver+opleiding+ jongerzwoertje +geslacht+ (1|ID)+ (1|ID:inidvidualID), data=parents)
+summary(mmodelr1)
+
+mmodelr2<-lmer(relation~werkprive*waver+privewerk*waver +opleiding+ jongerzwoertje +geslacht+(1|ID)+ (1|ID:inidvidualID), data=parents)
+summary(mmodelr2)
+
+#mmodelr2<-lmer(relation~werkprive*wave*geslacht +privewerk*wave*geslacht +opleiding+ jongerzwoertje +(1|ID)+ (1|ID:inidvidualID), data=parents)
+#summary(mmodelr2)
+
+r.squaredGLMM(mmodelr1) 
+r.squaredGLMM(mmodelr2)
+```
+###R2 of these multilevel models 
+#Pseudo R2
+```{r}
+install.packages("MuMIn")
+library(MuMIn)
+
+r.squaredGLMM(mmodelc0) ###marginal r2, variance explained by fixed effects, there are none, and r2c is conditional r2, variance explained by entire model, including fixed and random effects. This is in the empty model the same as the ICC. 
+r.squaredGLMM(mmodelc1) 
+r.squaredGLMM(mmodelc2)
+
+r.squaredGLMM(mmodele0) ###marginal r2, variance explained by fixed effects, there are none, and r2c is conditional r2, variance explained by entire model, including fixed and random effects. This is in the empty model the same as the ICC. 
+r.squaredGLMM(mmodele1) 
+r.squaredGLMM(mmodele2)
+
+r.squaredGLMM(mmodelr0) ###marginal r2, variance explained by fixed effects, there are none, and r2c is conditional r2, variance explained by entire model, including fixed and random effects. This is in the empty model the same as the ICC. 
+r.squaredGLMM(mmodelr1) 
+r.squaredGLMM(mmodelr2)
+```
+
+
+
+```{r}
+#relationship
+1-logLik(mmodelc1)/logLik(mmodelc0)
+1-logLik(mmodelc2)/logLik(mmodelc0)
+
+#relationship
+1-logLik(mmodele1)/logLik(mmodele0)
+1-logLik(mmodele2)/logLik(mmodele0)
+
+
+#relationship
+1-logLik(mmodelr1)/logLik(mmodelr0)
+1-logLik(mmodelr2)/logLik(mmodelr0)
+```
+
+
+
+##reverse wave to see significance for the other wave
+```{r}
+#parents$geslachtr<-parents$geslacht
+#parents$geslachtr[parents$geslacht=="mother"]<-"1.mother"
+#parents$geslachtr[parents$geslacht=="father"]<-"2.father"
+#  table(parents$geslachtr)
+  
+parents$waver<-parents$wave
+parents$waver[parents$wave=="first"]<-"1.first"
+parents$waver[parents$wave=="corona"]<-"2.corona"
+  table(parents$waver)
+```
+
+```{r}
+mmodele2<-lmer(encourage~werkprive*wave+privewerk*wave +opleiding+ jongerzwoertje +geslacht+(1|ID)+ (1|ID:inidvidualID), data=parents)
+summary(mmodele2)
+
+mmodelc2<-lmer(coersive~werkprive*wave +privewerk*wave +opleiding+ jongerzwoertje + geslacht+ (1|ID)+ (1|ID:inidvidualID), data=parents)
+summary(mmodelc2)
+
+mmodelr2<-lmer(relation~werkprive*wave+privewerk*wave +opleiding+ jongerzwoertje +geslacht+(1|ID)+ (1|ID:inidvidualID), data=parents)
+summary(mmodelr2)
+```
+
+
+##With outliers included for comparison 
+###positive encouragement
+```{r}
+wave1vs<-wave1v
+coronawavevs<-coronawavev
+fatherss<-rbind(wave1vs, coronawavevs)
+
+wave1ms<-wave1m
+coronawaves<-coronawave
+motherss<-rbind(wave1ms, coronawaves)
+
+
+fatherss$geslacht<-"father" 
+motherss$geslacht<-"mother" 
+
+fatherss$inidvidualID<-paste("V",fatherss$ID, sep="")
+motherss$inidvidualID<-paste("M",motherss$ID, sep="")
+
+parents<-rbind(fatherss, motherss)
+
+
+parents$waver<-parents$wave
+parents$waver[parents$wave=="first"]<-"1.first"
+parents$waver[parents$wave=="corona"]<-"2.corona"
+  table(parents$waver)
+
+mmodele0<-lmer(encourage~(1|ID)+ (1|ID:inidvidualID), data=parents)
+
+mmodele1<-lmer(encourage~werkprive+privewerk +waver+ opleiding+ jongerzwoertje +geslacht+ (1|ID)+ (1|ID:inidvidualID), data=parents)
+summary(mmodele1)
+
+mmodele2<-lmer(encourage~werkprive*waver+privewerk*waver +opleiding+ jongerzwoertje +geslacht+(1|ID)+ (1|ID:inidvidualID), data=parents)
+summary(mmodele2)
+
+#mmodele2<-lmer(encourage~werkprive*wave*geslacht +privewerk*wave*geslacht +opleiding+ jongerzwoertje +(1|ID)+ (1|ID:inidvidualID), data=parents)
+#summary(mmodele2)
+
+r.squaredGLMM(mmodele1) 
+r.squaredGLMM(mmodele2)
+```
+###coersive parenting
+```{r}
+
+wave1vs<-wave1v
+coronawavevs<-coronawavev
+fatherss<-rbind(wave1vs, coronawavevs)
+
+wave1ms<-wave1m
+coronawaves<-coronawave
+motherss<-rbind(wave1ms, coronawaves)
+
+
+fatherss$geslacht<-"father" 
+motherss$geslacht<-"mother" 
+
+fatherss$inidvidualID<-paste("V",fatherss$ID, sep="")
+motherss$inidvidualID<-paste("M",motherss$ID, sep="")
+
+parents<-rbind(fatherss, motherss)
+
+
+parents$waver<-parents$wave
+parents$waver[parents$wave=="first"]<-"1.first"
+parents$waver[parents$wave=="corona"]<-"2.corona"
+  table(parents$waver)
+
+mmodelc0<-lmer(coersive~ (1|ID)+ (1|ID:inidvidualID), data=parents)
+
+
+mmodelc1<-lmer(coersive~werkprive+privewerk+ waver+opleiding+ jongerzwoertje + geslacht+ (1|ID)+ (1|ID:inidvidualID), data=parents)
+summary(mmodelc1)
+
+
+mmodelc2<-lmer(coersive~werkprive*waver +privewerk*waver +opleiding+ jongerzwoertje + geslacht+ (1|ID)+ (1|ID:inidvidualID), data=parents)
+summary(mmodelc2)
+
+#mmodelc2<-lmer(coersive~werkprive*wave*geslacht+ privewerk*wave*geslacht +opleiding+ jongerzwoertje +(1|ID)+ (1|ID:inidvidualID), data=parents)
+#summary(mmodelc2)
+
+r.squaredGLMM(mmodelc1) 
+r.squaredGLMM(mmodelc2)
+
+```
+
+
+
+
+###Parent child relationship quality
+```{r}
+wave1vs<-wave1v
+coronawavevs<-coronawavev
+motherss<-rbind(wave1vs, coronawavevs)
+
+wave1ms<-wave1m
+coronawaves<-coronawave
+fatherss<-rbind(wave1ms, coronawaves)
+
+fatherss$geslacht<-"father" 
+motherss$geslacht<-"mother" 
+
+fatherss$inidvidualID<-paste("V",fatherss$ID, sep="")
+motherss$inidvidualID<-paste("M",motherss$ID, sep="")
+
+parents<-rbind(fatherss, motherss)
+
+
+parents$waver<-parents$wave
+parents$waver[parents$wave=="first"]<-"1.first"
+parents$waver[parents$wave=="corona"]<-"2.corona"
+  table(parents$waver)
+
+mmodelr0<-lmer(relation~(1|ID)+ (1|ID:inidvidualID), data=parents)
+
+mmodelr1<-lmer(relation~werkprive+privewerk +waver+opleiding+ jongerzwoertje +geslacht+ (1|ID)+ (1|ID:inidvidualID), data=parents)
+summary(mmodelr1)
+
+mmodelr2<-lmer(relation~werkprive*waver+privewerk*waver +opleiding+ jongerzwoertje +geslacht+(1|ID)+ (1|ID:inidvidualID), data=parents)
+summary(mmodelr2)
+
+#mmodelr2<-lmer(relation~werkprive*wave*geslacht +privewerk*wave*geslacht +opleiding+ jongerzwoertje +(1|ID)+ (1|ID:inidvidualID), data=parents)
+#summary(mmodelr2)
+
+r.squaredGLMM(mmodelr1) 
+r.squaredGLMM(mmodelr2)
+```
+
+
+###########################################
+######this were the main models above 
+####below are extra checks for groups seperately 
+##for men and women seperately
+##by wave, with and withour outliers etcetera 
+
+
+###################################################################################################################################################################
+
+##First sep fatehrs and mothers
+
+
+##wave 1 mothers
+```{r}
+regress<-lm(parchildrelation_m_M~privewerk_moeder+ werkprive_moeder+ opleidummymoeder +
+              jongerzwoertje , data=corona)
+summary(regress)
+
+regress<-lm(coerciveparenting_m_M~privewerk_moeder+ werkprive_moeder+ opleidummymoeder +
+              jongerzwoertje , data=corona)
+summary(regress)
+
+regress<-lm(positiveEncouragement_m_M~privewerk_moeder+ werkprive_moeder+ opleidummymoeder +
+              jongerzwoertje , data=corona)
+summary(regress)
+
+```
+
+
+#wave 2 mothers
+```{r}
+regress<-lm(parchildrel_corona_m_M~privewerk_moeder_corona+ werkprive_moeder_corona+ opleidummymoeder +
+              jongerzwoertje_corona , data=corona)
+summary(regress)
+
+regress<-lm(coercive_corona_m_M~privewerk_moeder_corona+ werkprive_moeder_corona+ opleidummymoeder +
+              jongerzwoertje_corona , data=corona)
+summary(regress)
+
+regress<-lm(posencourage_corona_m_M~privewerk_moeder_corona+ werkprive_moeder_corona+ opleidummymoeder +
+              jongerzwoertje_corona , data=corona)
+summary(regress)
+
+#regress<-lm(consistency_corona_m_M~privewerk_moeder_corona+ werkprive_moeder_corona+ opleidummymoeder +
+#              jongerzwoertje_corona , data=corona)
+#summary(regress)
+```
+
+
+
+###wave 1 fathers
+```{r}
+regress<-lm(parchildrelation_m_V~privewerk_vader+ werkprive_vader+ opleidummyvader +
+              jongerzwoertje , data=corona)
+summary(regress)
+
+regress<-lm(coerciveparenting_m_V~privewerk_vader+ werkprive_vader+ opleidummyvader +
+              jongerzwoertje , data=corona)
+summary(regress)
+
+regress<-lm(positiveEncouragement_m_V~privewerk_vader+ werkprive_vader+ opleidummyvader +
+              jongerzwoertje , data=corona)
+summary(regress)
+
+```
+
+
+
+###wave 2 fathers
+```{r}
+regress<-lm(parchildrel_corona_m_V~privewerk_vader_corona+ werkprive_vader_corona+ opleidummyvader +
+              jongerzwoertje_corona , data=corona)
+summary(regress)
+
+regress<-lm(coercive_corona_m_V~privewerk_vader_corona+ werkprive_vader_corona+ opleidummyvader +
+              jongerzwoertje_corona , data=corona)
+summary(regress)
+
+regress<-lm(posencourage_corona_m_V~privewerk_vader_corona+ werkprive_vader_corona+ opleidummyvader +
+              jongerzwoertje_corona , data=corona)
+summary(regress)
+
+#regress<-lm(consistency_corona_m_V~privewerk_vader_corona+ werkprive_vader_corona+ opleidummyvader +
+#              jongerzwoertje_corona , data=corona)
+#summary(regress)
+
+
+```
+
+
+###################################################################################################################################################################
+##Step 4, regression models
+
+###################################################################################################################################################################
+##Step 4, without outliers
+
+
+##mothers
+```{r}
+coronas<-corona[-c( 4, 79,92,56 ),]
+regress<-lm(parchildrelation_m_M~privewerk_moeder+ werkprive_moeder+ opleidummymoeder +
+              jongerzwoertje , data=coronas)
+summary(regress)
+
+coronas<-corona[-c(20 ,6 , 70, 56),]
+regress<-lm(coerciveparenting_m_M~privewerk_moeder+ werkprive_moeder+ opleidummymoeder +
+              jongerzwoertje , data=coronas)
+summary(regress)
+
+coronas<-corona[-c( 34,74 , 77, 16, 56, 57),]
+regress<-lm(positiveEncouragement_m_M~privewerk_moeder+ werkprive_moeder+ opleidummymoeder +
+              jongerzwoertje , data=coronas)
+summary(regress)
+
+```
+
+
+#mothers wave 2
+```{r}
+coronas<-corona[-c( 92, 64, 90 ),]
+regress<-lm(parchildrel_corona_m_M~privewerk_moeder_corona+ werkprive_moeder_corona+ opleidummymoeder +
+              jongerzwoertje_corona , data=coronas)
+summary(regress)
+
+coronas<-corona[-c( 90,20 ),]
+regress<-lm(coercive_corona_m_M~privewerk_moeder_corona+ werkprive_moeder_corona+ opleidummymoeder +
+              jongerzwoertje_corona , data=coronas)
+summary(regress)
+
+coronas<-corona[-c(13),]
+regress<-lm(posencourage_corona_m_M~privewerk_moeder_corona+ werkprive_moeder_corona+ opleidummymoeder +
+              jongerzwoertje_corona , data=coronas)
+summary(regress)
+
+
+```
+
+
+
+###fathers
+```{r}
+coronas<-corona[-c( 21, 10, 91, 7, 71),]
+regress<-lm(parchildrelation_m_V~privewerk_vader+ werkprive_vader+ opleidummyvader +
+             jongerzwoertje , data=coronas)
+summary(regress)
+
+coronas<-corona[-c( 17,71 ,82 ),]
+regress<-lm(coerciveparenting_m_V~privewerk_vader+ werkprive_vader+ opleidummyvader +
+              jongerzwoertje , data=coronas)
+summary(regress)
+
+coronas<-corona[-c( 21, 80, 71),]
+regress<-lm(positiveEncouragement_m_V~privewerk_vader+ werkprive_vader+ opleidummyvader +
+              jongerzwoertje , data=coronas)
+summary(regress)
+
+```
+
+
+
+###fatehrs wave 2
+```{r}
+coronas<-corona[-c( 89,80 ,57, 17, 7, 54),]
+regress<-lm(parchildrel_corona_m_V~privewerk_vader_corona+ werkprive_vader_corona+ opleidummyvader +
+              jongerzwoertje_corona , data=coronas)
+summary(regress)
+
+coronas<-corona[-c(96,80 , 17, 54),]
+regress<-lm(coercive_corona_m_V~privewerk_vader_corona+ werkprive_vader_corona+ opleidummyvader +
+              jongerzwoertje_corona , data=coronas)
+summary(regress)
+
+coronas<-corona[-c( 89,80 ,82 ,93 , 54),]
+regress<-lm(posencourage_corona_m_V~privewerk_vader_corona+ werkprive_vader_corona+ opleidummyvader +
+              jongerzwoertje_corona , data=coronas)
+summary(regress)
+
+
+```
+
+
+```{r}
+##VIF and correlation between two types of conflict
+
+cor.test(corona$werkprive_moeder, corona$privewerk_moeder)
+cor.test(corona$werkprive_vader, corona$privewerk_vader)
+cor.test(corona$werkprive_moeder_corona, corona$privewerk_moeder_corona)
+cor.test(corona$werkprive_vader_corona, corona$privewerk_vader_corona)
+
+```
+
+###################################################################################################################################################################
+##Step 3, regression models##
+
+##With outliers winsorized 
+
+```{r}
+#install.packages("DescTools")
+#library(DescTools)
+
+corona$positiveEncouragement_m_M_W<-corona$positiveEncouragement_m_M; corona$positiveEncouragement_m_M_W<-DescTools::Winsorize(corona$positiveEncouragement_m_M_W, minval=2.25 , na.rm=T)
+corona$positiveEncouragement_m_V_W<-corona$positiveEncouragement_m_V; corona$positiveEncouragement_m_V_W<-DescTools::Winsorize(corona$positiveEncouragement_m_V_W, minval=2.25 , na.rm=T)
+
+corona$posencourage_corona_m_M_W<-corona$posencourage_corona_m_M; corona$posencourage_corona_m_M_W<-DescTools::Winsorize(corona$posencourage_corona_m_M_W, minval=2.25, na.rm=T)
+corona$posencourage_corona_m_V_W<-corona$posencourage_corona_m_V; corona$posencourage_corona_m_V_W<-DescTools::Winsorize(corona$posencourage_corona_m_V_W, minval=2.25, na.rm=T)
+
+corona$coerciveparenting_m_M_W<-corona$coerciveparenting_m_M; corona$coerciveparenting_m_M_W<-DescTools::Winsorize(corona$coerciveparenting_m_M_W, maxval=2.25, na.rm=T)
+corona$coercive_corona_m_M_W<-corona$coercive_corona_m_M; corona$coercive_corona_m_M_W<-DescTools::Winsorize(corona$coercive_corona_m_M_W, maxval=2.25, na.rm=T)
+
+corona$coerciveparenting_m_V_W<-corona$coerciveparenting_m_V; corona$coerciveparenting_m_V_W<-DescTools::Winsorize(corona$coerciveparenting_m_V_W, maxval=2.25, na.rm=T)
+corona$coercive_corona_m_V_W<-corona$coercive_corona_m_V; corona$coercive_corona_m_V_W<-DescTools::Winsorize(corona$coercive_corona_m_V_W, maxval=2.25, na.rm=T)
+
+corona$parchildrelation_m_M_W<-corona$parchildrelation_m_M; corona$parchildrelation_m_M_W<-DescTools::Winsorize(corona$parchildrelation_m_M_W, minval=3.25, na.rm=T)
+corona$parchildrel_corona_m_M_W<-corona$parchildrel_corona_m_M; corona$parchildrel_corona_m_M_W<-DescTools::Winsorize(corona$parchildrel_corona_m_M_W, minval=3.25, na.rm=T)
+
+corona$parchildrelation_m_V_W<-corona$parchildrelation_m_V; corona$parchildrelation_m_V_W<-DescTools::Winsorize(corona$parchildrelation_m_V_W, minval=3.25, na.rm=T)
+corona$parchildrel_corona_m_V_W<-corona$parchildrel_corona_m_V; corona$parchildrel_corona_m_V_W<-DescTools::Winsorize(corona$parchildrel_corona_m_V_W, minval=3.25, na.rm=T)
+
+###see what happens with a scatterplot
+plot(corona$parchildrelation_m_M_W, corona$parchildrelation_m_M)
+
+```
+```{r}
+
+```
+
+
+##Voor corona voor moeders
+```{r}
+regress<-lm(parchildrelation_m_M_W~privewerk_moeder+ werkprive_moeder+ opleidummymoeder +
+              jongerzwoertje , data=corona)
+summary(regress)
+
+regress<-lm(coerciveparenting_m_M_W~privewerk_moeder+ werkprive_moeder+ opleidummymoeder +
+              jongerzwoertje , data=corona)
+summary(regress)
+
+regress<-lm(positiveEncouragement_m_M_W~privewerk_moeder+ werkprive_moeder+ opleidummymoeder +
+              jongerzwoertje , data=corona)
+summary(regress)
+
+```
+
+
+#tijdens corona voor moeders
+```{r}
+regress<-lm(parchildrel_corona_m_M_W~privewerk_moeder_corona+ werkprive_moeder_corona+ opleidummymoeder +
+              jongerzwoertje_corona , data=corona)
+summary(regress)
+
+regress<-lm(coercive_corona_m_M_W~privewerk_moeder_corona+ werkprive_moeder_corona+ opleidummymoeder +
+              jongerzwoertje_corona , data=corona)
+summary(regress)
+
+regress<-lm(posencourage_corona_m_M_W~privewerk_moeder_corona+ werkprive_moeder_corona+ opleidummymoeder +
+              jongerzwoertje_corona , data=corona)
+summary(regress)
+
+#regress<-lm(consistency_corona_m_M~privewerk_moeder_corona+ werkprive_moeder_corona+ opleidummymoeder +
+#              jongerzwoertje_corona , data=corona)
+#summary(regress)
+```
+
+
+
+###Voor corona voor vaders
+```{r}
+regress<-lm(parchildrelation_m_V_W~privewerk_vader+ werkprive_vader+ opleidummyvader +
+              jongerzwoertje , data=corona)
+summary(regress)
+
+regress<-lm(coerciveparenting_m_V_W~privewerk_vader+ werkprive_vader+ opleidummyvader +
+              jongerzwoertje , data=corona)
+summary(regress)
+
+regress<-lm(positiveEncouragement_m_V_W~privewerk_vader+ werkprive_vader+ opleidummyvader +
+              jongerzwoertje , data=corona)
+summary(regress)
+
+```
+
+
+
+###Tijdens corona  voor vaders
+```{r}
+regress<-lm(parchildrel_corona_m_V_W~privewerk_vader_corona+ werkprive_vader_corona+ opleidummyvader +
+              jongerzwoertje_corona , data=corona)
+summary(regress)
+
+regress<-lm(coercive_corona_m_V_W~privewerk_vader_corona+ werkprive_vader_corona+ opleidummyvader +
+              jongerzwoertje_corona , data=corona)
+summary(regress)
+
+regress<-lm(posencourage_corona_m_V_W~privewerk_vader_corona+ werkprive_vader_corona+ opleidummyvader +
+              jongerzwoertje_corona , data=corona)
+summary(regress)
+
+#regress<-lm(consistency_corona_m_V~privewerk_vader_corona+ werkprive_vader_corona+ opleidummyvader +
+#              jongerzwoertje_corona , data=corona)
+#summary(regress)
+
+
+```
+
+############################################################################################
+##Step 5, hurdle model for difference between 4 and less, and within the less group 
+
+```{r}
+corona$binrela_m[corona$parchildrelation_m_M==4]<-1;  corona$binrela_m[corona$parchildrelation_m_M<4]<-0; table(corona$binrela_m)
+corona$cutrela_m<-corona$parchildrelation_m_M; corona$cutrela_m[corona$parchildrelation_m_M==4]<-NA
+
+corona$binrela_corona_m[corona$parchildrel_corona_m_M==4]<-1;  corona$binrela_corona_m[corona$parchildrel_corona_m_M<4]<-0; table(corona$binrela_corona_m)
+corona$cutrela_corona_m<-corona$parchildrel_corona_m_M; corona$cutrela_corona_m[corona$parchildrel_corona_m_M==4]<-NA
+
+corona$binrela_v[corona$parchildrelation_m_V==4]<-1;  corona$binrela_v[corona$parchildrelation_m_V<4]<-0; table(corona$binrela_v)
+corona$cutrela_v<-corona$parchildrelation_m_V; corona$cutrela_v[corona$parchildrelation_m_V==4]<-NA
+
+corona$binrela_corona_v[corona$parchildrel_corona_m_V==4]<-1;  corona$binrela_corona_v[corona$parchildrel_corona_m_V<4]<-0; table(corona$binrela_corona_v)
+corona$cutrela_corona_v<-corona$parchildrel_corona_m_V; corona$cutrela_corona_v[corona$parchildrel_corona_m_V==4]<-NA
+
+```
+
+###For the binary outcome, less had to be removed because of outliers do not matter here in par-child rela 
+```{r}
+coronas<-corona[-c( 4, 56 ),] #79,92
+regress<-glm(binrela_m~privewerk_moeder+ werkprive_moeder+ opleidummymoeder +
+              jongerzwoertje , binomial, data=coronas)
+summary(regress)
+        
+coronas<-corona  #[-c( 92, 64, 90 ),]
+regress<-glm(binrela_corona_m~privewerk_moeder_corona+ werkprive_moeder_corona+ opleidummymoeder +
+              jongerzwoertje_corona , binomial, data=coronas)
+summary(regress)   
+
+coronas<-corona[-c( 21, 71),]# , 10, 91, 7
+regress<-glm(binrela_v~privewerk_vader+ werkprive_vader+ opleidummyvader +
+              jongerzwoertje , binomial, data=coronas)
+summary(regress)
+
+coronas<-corona[-c( 89,80 , 54),]# ,17,57, 17, 7
+regress<-glm(binrela_corona_v~privewerk_vader_corona+ werkprive_vader_corona+ opleidummyvader +
+              jongerzwoertje_corona , binomial, data=coronas)
+summary(regress)
+```
+
+
+##For the outliers removed
+```{r}
+coronas<-corona[-c( 4, 79,92,56 ),]
+regress<-lm(cutrela_m~privewerk_moeder+ werkprive_moeder+ opleidummymoeder +
+              jongerzwoertje , data=coronas)
+summary(regress)
+        
+coronas<-corona[-c( 92, 64, 90 ),]
+regress<-lm(cutrela_corona_m~privewerk_moeder_corona+ werkprive_moeder_corona+ opleidummymoeder +
+              jongerzwoertje_corona , data=coronas)
+summary(regress)   
+
+coronas<-corona[-c( 21, 10, 91, 7, 71),]
+regress<-lm(cutrela_v~privewerk_vader+ werkprive_vader+ opleidummyvader +
+              jongerzwoertje , data=coronas)
+summary(regress)
+
+coronas<-corona[-c( 89,80 ,17,57, 17, 7, 54),]
+regress<-lm(cutrela_corona_v~privewerk_vader_corona+ werkprive_vader_corona+ opleidummyvader +
+              jongerzwoertje_corona , data=coronas)
+summary(regress)
+```
+
+
+####Step 6, multilevel model for difference between waves in the relationship WFC and parenting
+#Multilevel model
+```{r}
+setwd("C:/users/Renske/OneDrive - Erasmus University Rotterdam/Documents/3 hoek")
+load("corona.RData")
+
+installed.packages("ggplot2")
+library(ggplot2)
+
+options(max.print=1000000)
+#names(corona)
+
+install.packages("lme4")
+library(lme4)
+```
+
+
+
+##Women models
+
+
+
+
+##Significant effect of privewerk on coersive parenting, no interaction with wave
+```{r}
+wave1ms<-wave1m[-c(20 ,6 , 70, 56 ),]
+coronawaves<-coronawave[-c( 90,20 ),]
+motherss<-rbind(wave1ms, coronawaves)
+
+mmodel<-lmer(coersive~werkprive+privewerk +opleiding+ jongerzwoertje+ wave +(1|ID), data=motherss)
+summary(mmodel)
+
+mmodel<-lmer(coersive~werkprive*wave+privewerk*wave +opleiding+ jongerzwoertje +(1|ID), data=motherss)
+summary(mmodel)
+
+
+```
+
+##NO effect
+```{r}
+wave1ms<-wave1m[-c( 34,74 , 77, 16, 56, 57 ),]
+coronawaves<-coronawave[-c( 13 ),]
+motherss<-rbind(wave1ms, coronawaves)
+
+
+mmodel<-lmer(encourage~werkprive+privewerk +opleiding+ jongerzwoertje+wave +(1|ID), data=motherss)
+summary(mmodel)
+
+mmodel<-lmer(encourage~werkprive*wave+privewerk*wave +opleiding+ jongerzwoertje +(1|ID), data=motherss)
+summary(mmodel)
+
+```
+
+##no effect
+```{r}
+wave1ms<-wave1m[-c( 4, 79,92,56  ),]
+coronawaves<-coronawave[-c( 92, 64, 90),]
+motherss<-rbind(wave1ms, coronawaves)
+
+mmodel<-lmer(relation~werkprive+privewerk +opleiding+ jongerzwoertje+ wave +(1|ID), data=mothers)
+summary(mmodel)
+
+mmodel<-lmer(relation~werkprive*wave+privewerk*wave +opleiding+ jongerzwoertje +(1|ID), data=mothers)
+summary(mmodel)
+
+```
+
+
+
+#####VADERS##############
+
+
+
+
+##NO effect, and no interaction with wave
+```{r}
+wave1vs<-wave1v[-c(17,71 ,82 ),]
+coronawavevs<-coronawavev[-c(96,80 , 17, 54),]
+fatherss<-rbind(wave1vs, coronawavevs)
+
+
+mmodel<-lmer(coersive~werkprive+privewerk +opleiding+ jongerzwoertje+wave +(1|ID), data=fathers)
+summary(mmodel)
+
+mmodel<-lmer(coersive~werkprive*wave+privewerk*wave +opleiding+ jongerzwoertje +(1|ID), data=fathers)
+summary(mmodel)
+
+```
+
+##NO effect
+```{r}
+wave1vs<-wave1v[-c(21, 80, 71 ),]
+coronawavevs<-coronawavev[-c(89,80 ,82 ,93 , 54),]
+fatherss<-rbind(wave1vs, coronawavevs)
+
+mmodel<-lmer(encourage~werkprive+privewerk +opleiding+ jongerzwoertje+wave +(1|ID), data=fathers)
+summary(mmodel)
+
+mmodel<-lmer(encourage~werkprive*wave+privewerk*wave +opleiding+ jongerzwoertje +(1|ID), data=fathers)
+summary(mmodel)
+```
+
+##significant effect and interaction with wave. 
+```{r}
+wave1vs<-wave1v[-c( 21, 10, 91, 7, 71),]
+coronawavevs<-coronawavev[-c(89,80 ,57, 17, 7, 54),]
+fatherss<-rbind(wave1vs, coronawavevs)
+
+mmodel<-lmer(relation~werkprive+privewerk +opleiding+ jongerzwoertje+wave +(1|ID), data=fathers)
+summary(mmodel)
+
+mmodel<-lmer(relation~werkprive*wave+privewerk*wave +opleiding+ jongerzwoertje +(1|ID), data=fathers)
+summary(mmodel)
+```
