@@ -30,10 +30,6 @@ sample_f <- df_finish[df_finish$frau=="1",]
 sample_m <- df_finish[df_finish$frau=="0",]
 
 
-install.packages("usethis")
-library(usethis)
-use_git_config(user.name = "leena96", user.email = "l-maass@t-online.de")
-
 
 ############################### Modelle FE ################################ 
 
