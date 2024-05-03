@@ -1,25 +1,40 @@
-####################  packages  #################### 
-
-library(tidyverse)
-library(ggplot2)
-library(RColorBrewer)
-library(mosaic)
-
-
-####################  files  #################### 
-
-setwd("C:/Users/HP/Documents/Datens?tze/pairfam_Welle11/pairfam Welle11/Data/Stata")
-list.files()
-df_finish <- readRDS("df_finish.RDS")
-
-windowsFonts(Times=windowsFont("Times New Roman")) #für schriftart
+# load packages ----------------------------------------------------------------
+pacman::p_load("tidyverse", "ggplot2", "systemfonts", 
+               "RColorBrewer", "mosaic")
 
 
 
+# load data --------------------------------------------------------------------
+df_finish <- readRDS("./data/df_finish.RDS")
 
-#################### graphs ####################
 
-########## graph 1: relative frequencies for the newly formed partnerships from online and offline meeting context
+
+# plot settings ----------------------------------------------------------------
+# font_fam1 <- "Open Sans" # r
+font_fam1 <- "Times New Roman"
+
+theme_set(
+  theme_minimal(base_family = font_fam1,base_size = 9) + 
+    theme(legend.position = "top",
+          legend.text = element_text(size = 15),
+          legend.title = element_text(size = 20),
+          legend.background = element_rect(fill = "grey98"),
+          strip.text.x = element_text(angle = 0, size = rel(1.35)),
+          strip.text.y = element_text(angle = 0, hjust = 0, size = rel(1.25)),
+          rect = element_rect(fill = NA, linetype = 1, colour = NA),
+          panel.grid.minor = element_blank(),panel.grid.major.x = element_blank(),
+          panel.spacing.y = unit(.5,"lines"),
+          axis.text = element_text(size = rel(1.1)),
+          axis.ticks = element_line(color = "grey25"),
+          axis.ticks.length=unit(.185,units = "lines"),
+          axis.line = element_line(linewidth = .15)) 
+)
+
+
+
+# graphs --------------------------------------------------------------------
+
+### graph 1: relative frequencies for the newly formed partnerships from online and offline meeting context
 g1 <- df_finish %>% select(id,wave,online,distanz_finish) %>% 
   rename(distance = distanz_finish) %>%
   group_by(online,wave) %>% count() %>% 
@@ -28,36 +43,38 @@ g1 <- df_finish %>% select(id,wave,online,distanz_finish) %>%
          p = n/sum) %>% 
   arrange(wave,online) 
 
-abb1 <- ggplot(g1, aes(x=as.numeric(wave)+2007, y=p, colour=online)) +
+graph1 <- ggplot(g1, aes(x=as.numeric(wave)+2007, y=p, fill=online)) +
   geom_line() +
   geom_point(size=2) +
   ylim(0, 1)+    
-  theme_minimal(base_size = 11, base_family = "Times")+
-  labs(title = "Relative frequency of new relationships initiated online and offline",
+  scale_fill_grey(start = 0.7, end = 0, labels=c("offline","online")) +
+  theme_minimal()+
+  labs(title = "Relative frequency of new relationships \n initiated online and offline",
     caption =  "Quelle: pairfam Welle 2-12", 
     y = "relative frequency",
     x = "wave",
-    colour = "meeting context") +
-  theme(legend.position="bottom") + expand_limits(y = c(0,.5))+
-  scale_colour_grey(start = 0.7, end = 0)
-abb1
-ggsave("abb1.png", width = 12, height = 12, units = "cm")
+    fill = "meeting context") +
+  theme(legend.position="bottom",
+        strip.text.y = element_text(angle = 0,size=rel(2)),
+        strip.text.x = element_text(angle = 0,size=rel(2))) + expand_limits(y = c(0,.5)) 
+graph1
+#ggsave("graph1.png", width = 12, height = 12, units = "cm")
 
 
-#Daten Tabelle g1 extrahieren Anhang : Relative und absolute Häufigkeiten der neu geschlossenen Partnerschaften nach der Welle (Quelle: pairfam, Welle 2-11)
+#Daten Tabelle g1 extrahieren Anhang : Relative und absolute Haeufigkeiten der neu geschlossenen Partnerschaften nach der Welle (Quelle: pairfam, Welle 2-11)
 relH <- g1 %>% group_by(wave) %>% pivot_wider(names_from = online, values_from = c(p,n,sum)) %>% arrange(wave)
 
 data.frame(relH) %>% flextable() %>% 
   font(fontname = "Times New Roman", part = "all") %>%
   bold(part="header") %>% 
-  colformat_double(decimal.mark=",",big.mark ="", digits = 1) %>% 
+  colformat_double(big.mark ="", digits = 1) %>% 
   autofit() 
 
 
 
 
 
-########## graph 2:  für graph: Fahrzeiten zum Partner im Online-/Offline-Vergleich
+### graph 1: relative frequencies for the newly formed partnerships from online and offline meeting context
 # Legende nicht vorhanden
 g2 <- df_finish %>% ungroup() %>% select(wave,online,distanz_finish) %>% 
   rename(distance = distanz_finish) %>% 
@@ -69,17 +86,19 @@ g2 <- df_finish %>% ungroup() %>% select(wave,online,distanz_finish) %>%
 facet1 <- g2 %>% pivot_longer(cols = c("distance_mean","distance_median"))
 facet2 <- facet1 %>% select(wave,online,name,value) %>% group_by(wave,name,online,value)%>% count() %>% ungroup()          # warum funktioniert gruppierung nicht?
 
-facet2$distance_new <- case_when(facet2$name == "distance_mean" & facet2$online == "offline" ~ "distance mean offline", 
-                                 facet2$name == "distance_mean" & facet2$online == "online"~ "distance mean online", 
-                                 facet2$name == "distance_median" & facet2$online == "offline"~ "distance median offline",
-                                 facet2$name == "distance_median" & facet2$online == "online" ~ "distance median online")
+facet2$distance_new <- case_when(facet2$name == "distance_mean" & facet2$online == "0" ~ "distance mean offline", 
+                                 facet2$name == "distance_mean" & facet2$online == "1"~ "distance mean online", 
+                                 facet2$name == "distance_median" & facet2$online == "0"~ "distance median offline",
+                                 facet2$name == "distance_median" & facet2$online == "1" ~ "distance median online") 
+
+facet2 %>% arrange(distance_new, online=="0") %>% print(n=30)
 
 
 ### offline/offline facets 
 vergl_distanz <- ggplot(facet2, aes(x=as.numeric(wave)+2007,y=value,shape=distance_new)) + #shape group und fill funktionieren nicht
   geom_line()+
   geom_point()+
-  facet_grid( ~ online,scales = "free_y",)+
+  facet_grid( ~ online,scales = "free_y")+
   ylim(0,120)+
   theme_minimal(base_size = 11, base_family = "Times")+
   theme(legend.position="bottom") +
@@ -87,14 +106,13 @@ vergl_distanz <- ggplot(facet2, aes(x=as.numeric(wave)+2007,y=value,shape=distan
        caption =  "Quelle: pairfam Welle 2-13",
        y = "distance (minutes)",
        x = "wave", 
-       group="distance_new")+
-  scale_shape_discrete(limits = c("Distanz Mean Offline", "Distanz Median Offline", "Distanz Mean Online", "Distanz Median Online"),
-                       labels = c("Mittelwert","Median","Mittelwert","Median"))
+       shape="distance_new") +
+  scale_shape_discrete(labels = c("distance mean offline", "distance mean online", "distance median offline", "distance median online"))
 vergl_distanz
 ggsave("vergl_distanz.png", width = 12, height = 12, units = "cm")
 
 
-# die dazugehörigen Werte als tabelle erstellen FÜR ANHANG!
+# die dazugehoerigen Werte als tabelle erstellen Fuer ANHANG!
 Anhang2 <- facet2 %>% select(-n) %>% pivot_wider(names_from = wave, values_from = value) %>% 
   arrange(online,name) %>% select(-name,-online) %>% 
   rename(`Welle 2` = `2`,
@@ -113,8 +131,8 @@ Anhang2_1 <- data.frame(Anhang2) %>% flextable() %>%
   font(fontname = "Times New Roman", part = "all") %>%
   bold(part="header") %>% 
   colformat_double(decimal.mark=",",big.mark ="", digits = 1) %>% 
-  autofit() %>% 
-  save_as_docx("Anhang1", path = "Distanz_Tab_über_Wellen2.docx")
+  autofit() #%>% 
+  #save_as_docx("Anhang1", path = "Distanz_Tab_ueber_Wellen2.docx")
 
 
 

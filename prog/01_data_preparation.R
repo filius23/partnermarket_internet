@@ -72,10 +72,10 @@ df1$frau <- as.factor(df1$frau)
 ### education: isced  ----------------------------------------------------------
 df1 %>% count(isced)
 df1$isced[df1$isced<0]<-NA
-df1$isced_2 <- case_when(df1$isced >= 0 & df1$isced <= 3 ~ "niedrig",     
-                         df1$isced >= 4 & df1$isced <= 6 ~ "mittel",
-                         df1$isced >= 7 & df1$isced <= 8 ~ "hoch")
-df1$isced_2 <- factor(df1$isced_2, levels = c("niedrig","mittel","hoch"))
+df1$isced_2 <- case_when(df1$isced >= 0 & df1$isced <= 3 ~ "low",     
+                         df1$isced >= 4 & df1$isced <= 6 ~ "middle",
+                         df1$isced >= 7 & df1$isced <= 8 ~ "high")
+df1$isced_2 <- factor(df1$isced_2, levels = c("low","middle","high"))
 
 
 ### Migration background  ------------------------------------------------------
@@ -90,10 +90,10 @@ df1$bula <- as.factor(df1$bula)
 
 ### Gemeindegröße (gkpol)  -----------------------------------------------------
 df1$gkpol[df1$gkpol<0] <- NA
-df1$gkpol_kat1 <- case_when(df1$gkpol >= 1 & df1$gkpol <= 3 ~ "Kleinstadt",     
-                            df1$gkpol >= 4 & df1$gkpol <= 5 ~ "Stadt",
-                            df1$gkpol >= 6 & df1$gkpol <= 7 ~ "Grossstadt")
-df1$gkpol_kat1 <- factor(df1$gkpol_kat1, levels = c("Kleinstadt","Stadt","Grossstadt"))
+df1$gkpol_kat1 <- case_when(df1$gkpol >= 1 & df1$gkpol <= 3 ~ "small",     
+                            df1$gkpol >= 4 & df1$gkpol <= 5 ~ "middle",
+                            df1$gkpol >= 6 & df1$gkpol <= 7 ~ "big")
+df1$gkpol_kat1 <- factor(df1$gkpol_kat1, levels = c("small","middle","big"))
 
 
 
@@ -166,7 +166,7 @@ table(df1$distance_under60)
 saveRDS(df1, file = "./data/df1.RDS")
 
 df2 <- df1 %>% select(id, wave, year, cohort, age, frau, isced, isced_2, migstatus, bula, gkpol_kat1,
-                      pa3, online, offline, 
+                      pa3, online,online2, 
                       p_wohnort, wohnort_gleich, hcp1i2,
                       distanz_gesamt, distanz_gesamt_a, distance_under60)
 saveRDS(df2, file = "./data/df2.RDS")
@@ -180,7 +180,7 @@ df3 <- df2[df2$wave!=1,]
 saveRDS(df3, file = "./data/df3.RDS")
 
 df4 <- df3 %>% select(id, wave, year, cohort, age, frau, isced_2, migstatus, bula, gkpol_kat1,
-                      pa3, online, offline, p_wohnort, wohnort_gleich, hcp1i2,
+                      pa3, online,online2, p_wohnort, wohnort_gleich, hcp1i2,
                       distanz_gesamt, distanz_gesamt_a, distance_under60) 
 saveRDS(df4, file = "./data/df4.RDS")
 
