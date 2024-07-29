@@ -1,94 +1,80 @@
 # load packages ----------------------------------------------------------------
-library(tidyverse)
-library(haven)
-library(Matrix)
-library(lme4)
-
+pacman::p_load("tidyverse", "haven", "Matrix", "lme4")
 
 # load data --------------------------------------------------------------------
 df_finish <- readRDS("./data/df_finish.RDS")
 
-
-######################### PACKAGES ######################### 
-
-library(tidyverse)
-# tools::package_dependencies("Matrix", which = "LinkingTo", reverse=TRUE)[[1]]
-# install.packages("lme4")
-library(Matrix)
-library(lme4)
-
-
-
-
-##################### getrennte DatensÃ¤tze nach Geschlecht ##################### 
-sample_f <- df_finish[df_finish$frau=="1",]
-sample_m <- df_finish[df_finish$frau=="0",]
+# separate data sets by gender -------------------------------------------------
+sample_f <- df_finish[df_finish$female=="1",]
+sample_m <- df_finish[df_finish$female=="0",]
 
 
 
 ############################### Modelle FE ################################ 
 
-### Nullmodelle Frauen und Männer ----------------------------------------------
-f_mod0 <- lmer(distanz_finish ~ (1|id) , data = sample_f)
+### Zero models women and men --------------------------------------------------
+
+# women ------------------------------------------------------------------------
+f_mod0 <- lmer(distance_finish ~ (1|id) , data = sample_f)
 performance::icc(f_mod0) 
 
-m_mod0 <- lmer(distanz_finish ~ (1|id) , data = sample_m)
+# men --------------------------------------------------------------------------
+m_mod0 <- lmer(distance_finish ~ (1|id) , data = sample_m)
 performance::icc(m_mod0)
 
 
+### multilevel regression by gender with interaction ---------------------------
 
-### Mehrebenenregression nach Geschlecht mit Interaktion -----------------------
-
-# Frauen -----------------------------------------------------------------------
-f_mod1 <- lmer(distanz_finish ~ online + year + (1|id) , data = sample_f)
-f_mod2 <- lmer(distanz_finish ~ online*year + (1|id) , data = sample_f)
+# women ------------------------------------------------------------------------
+f_mod1 <- lmer(distance_finish ~ online + year + (1|id) , data = sample_f)
+f_mod2 <- lmer(distance_finish ~ online*year + (1|id) , data = sample_f)
 summary(f_mod1)
 
 texreg::screenreg(list(f_mod1,f_mod2))
 performance::icc(f_mod1)
 
 
-# Männer -----------------------------------------------------------------------
-m_mod1 <- lmer(distanz_finish ~ online + year + (1|id) , data = sample_m)
-m_mod2 <- lmer(distanz_finish ~ online*year + (1|id) , data = sample_m)
+# men --------------------------------------------------------------------------
+m_mod1 <- lmer(distance_finish ~ online + year + (1|id) , data = sample_m)
+m_mod2 <- lmer(distance_finish ~ online*year + (1|id) , data = sample_m)
 summary(m_mod1)
 
 
 
-### Mehrebenenregression nach Geschlecht mit Interaktion vollstaendig ----------
-# Frauen -----------------------------------------------------------------------
-f_mod3 <- lmer(distanz_finish ~ online + year + gkpol_kat1 + isced_2 +  cohort + migstatus + (1|id) , data = sample_f)
-f_mod4 <- lmer(distanz_finish ~ online*year + gkpol_kat1 + isced_2 +  cohort + migstatus + (1|id) , data = sample_f)
+### multilevel regression by gender with interaction (complete model) ----------
+# women ------------------------------------------------------------------------
+f_mod3 <- lmer(distance_finish ~ online + year + gkpol_fct + isced_fct +  cohort + migstatus + (1|id) , data = sample_f)
+f_mod4 <- lmer(distance_finish ~ online*year + gkpol_fct + isced_fct +  cohort + migstatus + (1|id) , data = sample_f)
 summary(f_mod3)
 
 texreg::screenreg(list(f_mod3,f_mod4))
 
 
-# Männer -----------------------------------------------------------------------
-m_mod3 <- lmer(distanz_finish ~ online + year + gkpol_kat1 + isced_2 +  cohort + migstatus + (1|id) , data = sample_m)
-m_mod4 <- lmer(distanz_finish ~ online*year + gkpol_kat1 + isced_2 +  cohort + migstatus + (1|id) , data = sample_m)
+# men --------------------------------------------------------------------------
+m_mod3 <- lmer(distance_finish ~ online + year + gkpol_fct + isced_fct +  cohort + migstatus + (1|id) , data = sample_m)
+m_mod4 <- lmer(distance_finish ~ online*year + gkpol_fct + isced_fct +  cohort + migstatus + (1|id) , data = sample_m)
 texreg::screenreg(list(m_mod3,m_mod4))
 
 
 
-### Mehrebenenregression nach Geschlecht mit Interaktion vollstÃ¤ndig mit Random Slope fÃ¼r Jahr 
-# Anmerkung: nicht möglich
-# Frauen -----------------------------------------------------------------------
-# f_mod5 <- lmer(distanz_finish ~ online*year + gkpol_kat1 + isced_2 +  cohort + migstatus + (year|id) , data = sample_f)
+### multilevel regression by gender with interaction and random slope for year (full model)
+# Anmerkung: nicht m�glich, da Fallzahl zu klein
+# women ------------------------------------------------------------------------
+# f_mod5 <- lmer(distance_finish ~ online*year + gkpol_fct + isced_fct +  cohort + migstatus + (year|id) , data = sample_f)
 # texreg::screenreg(list(f_mod5))
 
-# Männer -----------------------------------------------------------------------
-# m_mod5 <- lmer(distanz_finish ~ online*year + gkpol_kat1 + isced_2 +  cohort + migstatus + (year|id) , data = sample_m)
+# men --------------------------------------------------------------------------
+# m_mod5 <- lmer(distance_finish ~ online*year + gkpol_fct + isced_fct +  cohort + migstatus + (year|id) , data = sample_m)
 # summary(m_mod5)
 
 
 
-### Mehrebenenregression nach Geschlecht mit Interaktion vollstaendig 3-Ebenen-Modell mit ID in Year
+### multilevel regression by gender with interaction (3-level model with ID in Year)
 # Anmerkung: funktioniert so auch nicht
-# Frauen -----------------------------------------------------------------------
-# f_mod6 <- lmer(distanz_finish ~ online*year + gkpol_kat1 + isced_2 +  cohort + migstatus + (1|id:year) , data = sample_f)
+# women ------------------------------------------------------------------------
+# f_mod6 <- lmer(distance_finish ~ online*year + gkpol_fct + isced_fct +  cohort + migstatus + (1|id:year) , data = sample_f)
 # summary(f_mod6)
 # 
-# # Männer -----------------------------------------------------------------------
-# m_mod6 <- lmer(distanz_finish ~ online*year + gkpol_kat1 + isced_2 +  cohort + migstatus + (1|id:year) , data = sample_m)
+# men --------------------------------------------------------------------------
+# m_mod6 <- lmer(distance_finish ~ online*year + gkpol_fct + isced_fct +  cohort + migstatus + (1|id:year) , data = sample_m)
 # summary(m_mod6)

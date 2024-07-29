@@ -2,13 +2,14 @@
 pacman::p_load("tidyverse", "marginaleffects", "systemfonts", 
                "modelsummary", "flextable", "fixest") #"ggfortify"
 
+
 # load data --------------------------------------------------------------------
 df_finish <- readRDS("./data/df_finish.RDS")
 
-##################### getrennte Datensätze nach Geschlecht ##################### 
 
-sample_f <- df_finish[df_finish$frau=="1",]
-sample_m <- df_finish[df_finish$frau=="0",]
+# separate data sets by gender -------------------------------------------------
+sample_f <- df_finish[df_finish$female=="1",]
+sample_m <- df_finish[df_finish$female=="0",]
 
 
 # plot settings ----------------------------------------------------------------
@@ -32,30 +33,31 @@ theme_set(
           axis.line = element_line(linewidth = .15)) 
 )
 
-# FE Models --------------------------------------------------------------------
+# FE models --------------------------------------------------------------------
 
-### Panelregression nach Geschlecht mit Interaktion 
+### Panel regression by gender with interaction 
 
-# Frauen -----------------------------------------------------------------------
-fixest::feols(wohnort_gleich ~ online + factor(age) |id, data = sample_f)
-fixest::feglm(wohnort_gleich ~ online + factor(age) |id, data = sample_f,family = "binomial")
+# women ------------------------------------------------------------------------
+fixest::feols(same_lp ~ online + factor(age) |id, data = sample_f)
+fixest::feglm(same_lp ~ online + factor(age) |id, data = sample_f,family = "binomial")
 
 
-fixest::feols(distanz_finish ~ online |id, data = sample_f)
-fixest::feols(distanz_finish ~ online + factor(age)|id, data = sample_f)
+fixest::feols(distance_finish ~ online |id, data = sample_f)
+fixest::feols(distance_finish ~ online + factor(age)|id, data = sample_f)
 
-f_mod0 <- fixest::feols(distanz_finish ~ gkpol_kat1 + age + online*year , data = sample_f)
-f_mod1 <- fixest::feols(distanz_finish ~ gkpol_kat1 + age + online*year | id, data = sample_f)
-f_mod2 <- fixest::feols(distanz_finish ~ gkpol_kat1 + age + online*year_fct | id, data = sample_f)
+f_mod0 <- fixest::feols(distance_finish ~ gkpol_fct + age + online*year , data = sample_f)
+f_mod1 <- fixest::feols(distance_finish ~ gkpol_fct + age + online*year | id, data = sample_f)
+f_mod2 <- fixest::feols(distance_finish ~ gkpol_fct + age + online*year_fct | id, data = sample_f)
 
-# Männer -----------------------------------------------------------------------
-fixest::feols(distanz_finish ~ online|id , data = sample_m)
 
-fixest::feols(distanz_finish ~ online , data = sample_m %>% filter(wave==2))
+# men --------------------------------------------------------------------------
+fixest::feols(distance_finish ~ online|id , data = sample_m)
 
-m_mod0 <- fixest::feols(distanz_finish ~ gkpol_kat1 + age + online*year , data = sample_m)
-m_mod1 <- fixest::feols(distanz_finish ~ gkpol_kat1 + age + online*year | id, data = sample_m)
-m_mod2 <- fixest::feols(distanz_finish ~ gkpol_kat1 + age + online*year_fct | id, data = sample_m)
+fixest::feols(distance_finish ~ online , data = sample_m %>% filter(wave==2))
+
+m_mod0 <- fixest::feols(distance_finish ~ gkpol_fct + age + online*year , data = sample_m)
+m_mod1 <- fixest::feols(distance_finish ~ gkpol_fct + age + online*year | id, data = sample_m)
+m_mod2 <- fixest::feols(distance_finish ~ gkpol_fct + age + online*year_fct | id, data = sample_m)
 
 
 ## avg marginal effects -----
@@ -69,7 +71,7 @@ ame_at_year <- function(mod){
   if (any(grepl("year",    names(coefficients(mod))))) marginaleffects::avg_slopes(mod, variables = "online", by ="year")
 }
 
-fixest::feols(distanz_finish ~ online*year + age| id, data = sample_f) %>% 
+fixest::feols(distance_finish ~ online*year + age| id, data = sample_f) %>% 
   ame_at_year()
 
 

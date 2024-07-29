@@ -1,23 +1,18 @@
 # load packages ----------------------------------------------------------------
-pacman::p_load("tidyverse", "ggplot2", "systemfonts", 
-               "RColorBrewer", "mosaic")
-
-
+pacman::p_load("tidyverse", "ggplot2", "systemfonts", "RColorBrewer", "mosaic")
 
 # load data --------------------------------------------------------------------
 df_finish <- readRDS("./data/df_finish.RDS")
-
-
 
 # plot settings ----------------------------------------------------------------
 # font_fam1 <- "Open Sans" # r
 font_fam1 <- "Times New Roman"
 
 theme_set(
-  theme_minimal(base_family = font_fam1,base_size = 9) + 
+  theme_minimal(base_family = font_fam1,base_size = 12) + 
     theme(legend.position = "top",
-          legend.text = element_text(size = 15),
-          legend.title = element_text(size = 20),
+          legend.text = element_text(size = 10),
+          legend.title = element_text(size = 12),
           legend.background = element_rect(fill = "grey98"),
           strip.text.x = element_text(angle = 0, size = rel(1.35)),
           strip.text.y = element_text(angle = 0, hjust = 0, size = rel(1.25)),
@@ -35,25 +30,26 @@ theme_set(
 # graphs --------------------------------------------------------------------
 
 ### graph 1: relative frequencies for the newly formed partnerships from online and offline meeting context
-g1 <- df_finish %>% select(id,wave,online,distanz_finish) %>% 
-  rename(distance = distanz_finish) %>%
+g1 <- df_finish %>% select(id,wave,online,distance_finish) %>% 
+  rename(distance = distance_finish) %>%
   group_by(online,wave) %>% count() %>% 
   group_by(wave) %>% 
   mutate(sum = sum(n),
          p = n/sum) %>% 
   arrange(wave,online) 
 
-graph1 <- ggplot(g1, aes(x=as.numeric(wave)+2007, y=p, fill=online)) +
+ggplot(g1, aes(x=as.numeric(wave)+2007, y=p, linetype=factor(online))) +
   geom_line() +
   geom_point(size=2) +
   ylim(0, 1)+    
-  scale_fill_grey(start = 0.7, end = 0, labels=c("offline","online")) +
-  theme_minimal()+
-  labs(title = "Relative frequency of new relationships \n initiated online and offline",
-    caption =  "Quelle: pairfam Welle 2-12", 
+  scale_linetype_discrete(
+    name = "meeting place",
+    breaks=c("0", "1"),
+    labels=c("offline","online")) +
+  labs(title = "Relative frequency of the meeting place \n of the newly formed partnerships",
+    caption =  "Source: pairfam, wave 2-12", 
     y = "relative frequency",
-    x = "wave",
-    fill = "meeting context") +
+    x = "wave") +
   theme(legend.position="bottom",
         strip.text.y = element_text(angle = 0,size=rel(2)),
         strip.text.x = element_text(angle = 0,size=rel(2))) + expand_limits(y = c(0,.5)) 
@@ -76,8 +72,8 @@ data.frame(relH) %>% flextable() %>%
 
 ### graph 1: relative frequencies for the newly formed partnerships from online and offline meeting context
 # Legende nicht vorhanden
-g2 <- df_finish %>% ungroup() %>% select(wave,online,distanz_finish) %>% 
-  rename(distance = distanz_finish) %>% 
+g2 <- df_finish %>% ungroup() %>% select(wave,online,distance_finish) %>% 
+  rename(distance = distance_finish) %>% 
   filter(!is.na(online)) %>% filter(!is.na(distance)) %>% 
   group_by(wave, online)%>% #mittelwert nach kategorie berechnen
   mutate(distance_mean = mean(distance)) %>%
@@ -95,7 +91,9 @@ facet2 %>% arrange(distance_new, online=="0") %>% print(n=30)
 
 
 ### offline/offline facets 
-vergl_distanz <- ggplot(facet2, aes(x=as.numeric(wave)+2007,y=value,shape=distance_new)) + #shape group und fill funktionieren nicht
+#vergl_distanz <- 
+  
+ggplot(facet2, aes(x=as.numeric(wave)+2007,y=value,shape=distance_new)) + #shape group und fill funktionieren nicht
   geom_line()+
   geom_point()+
   facet_grid( ~ online,scales = "free_y")+
@@ -115,16 +113,16 @@ ggsave("vergl_distanz.png", width = 12, height = 12, units = "cm")
 # die dazugehoerigen Werte als tabelle erstellen Fuer ANHANG!
 Anhang2 <- facet2 %>% select(-n) %>% pivot_wider(names_from = wave, values_from = value) %>% 
   arrange(online,name) %>% select(-name,-online) %>% 
-  rename(`Welle 2` = `2`,
-         `Welle 3` = `3`,
-         `Welle 4` = `4`,
-         `Welle 5` = `5`,
-         `Welle 6` = `6`,
-         `Welle 7` = `7`,
-         `Welle 8` = `8`,
-         `Welle 9` = `9`,
-         `Welle 10` = `10`,
-         `Welle 11` = `11`) %>% # , `Welle 12` = `12`
+  rename(`wave 2` = `2`,
+         `wave 3` = `3`,
+         `wave 4` = `4`,
+         `wave 5` = `5`,
+         `wave 6` = `6`,
+         `wave 7` = `7`,
+         `wave 8` = `8`,
+         `wave 9` = `9`,
+         `wave 10` = `10`,
+         `wave 11` = `11`) %>% 
   group_by(distance_new)
 
 Anhang2_1 <- data.frame(Anhang2) %>% flextable() %>% 
@@ -140,30 +138,29 @@ Anhang2_1 <- data.frame(Anhang2) %>% flextable() %>%
 
 ###### katg. Var: Vergleichen wir die Mittelwerte Distanz zwischen den Online&Offline: ANHANG
 mean_dis_vergl <- df_finish %>%
-  drop_na(distanz_finish, online) %>%
+  drop_na(distance_finish, online) %>%
   group_by(online) %>%
-  summarise(mean_dis = mean(distanz_finish)) 
+  summarise(mean_dis = mean(distance_finish)) 
 mean_dis_vergl
 
 
 mittelwertvergleich <- df_finish %>% 
-  ggplot() +
-  aes(x = online, y = distanz_finish) +
+  ggplot(aes(x = factor(online), y = distance_finish)) +
   geom_boxplot(width = .1) +
   geom_jitter(width = .1, alpha = .1) +
-  theme_minimal(base_size = 11, base_family = "Times") +
-  ylim(0,600) +
-  labs(title = "Mean value comparison of the meeting locations",
-       #caption =  "Quelle: pairfam Welle 2-11", 
-       y = "Distance to partner (minutes)") +
+  ylim(0,500) +
+  labs(title = "Mean value comparison of the meeting place",
+       caption = "Source: pairfam, wave 2-11", 
+       y = "Distance to partner (minutes)",
+       x = "Meeting place") +
   theme_minimal(base_size = 11, base_family = "Times") +
   geom_point(data = mean_dis_vergl,
-             aes(x=online, y=mean_dis),
+             aes(x=factor(online), y=mean_dis),
              color = "red",
              size = 5,
              shape = 19) +
   geom_line(data = mean_dis_vergl,
-            aes(x=online, y=mean_dis),
+            aes(x=factor(online), y=mean_dis),
             group = 1,
             color = "red")
 
