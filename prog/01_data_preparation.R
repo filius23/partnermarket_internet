@@ -44,6 +44,7 @@ df1 <- readRDS(file = "./data/anchor_w1-11.RDS")
 ### year of survey
 df1$year <- as.numeric(df1$wave) + 2008
 df1 %>% count(wave,year)
+df1$year_fct <- factor(df1$year)
 
 ### year of birth and birth cohort ---------------------------------------------
 df1 %>% count(doby_gen,cohort)
@@ -128,7 +129,7 @@ table(df1$distance_total_960)
 
 saveRDS(df1, file = "./data/df1.RDS")
 
-df2 <- df1 %>% select(id, wave, year, cohort, age, female, isced, isced_fct, migstatus, gkpol_fct,
+df2 <- df1 %>% select(id, wave, year, year_fct, cohort, age, female, isced, isced_fct, migstatus, gkpol_fct,
                       pa3, online, p_abroad, same_lp, hcp1i2,
                       distance_total, distance_total_960)
 saveRDS(df2, file = "./data/df2.RDS")
@@ -139,7 +140,7 @@ saveRDS(df2, file = "./data/df2.RDS")
 df3 <- df2[df2$wave!=1,]
 saveRDS(df3, file = "./data/df3.RDS")
 
-df4 <- df3 %>% select(id, wave, year, cohort, age, female, isced_fct, migstatus, gkpol_fct,
+df4 <- df3 %>% select(id, wave, year, year_fct, cohort, age, female, isced_fct, migstatus, gkpol_fct,
                       pa3, online, p_abroad, same_lp, hcp1i2,
                       distance_total, distance_total_960) 
 saveRDS(df4, file = "./data/df4.RDS")
