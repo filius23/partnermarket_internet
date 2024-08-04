@@ -3,12 +3,6 @@
 library(tidyverse)
 library(haven)
 
-# Variables --------------------------------------------------------------------
-
-#Welle 1-11: pa2m, pa2y,pa3, hcp1i1, hcp1i2, hcp3h, hcp3m, pa9, hc13h1 inc
-#strukturelle Merkmale des Partnermarktes (Welle 1-11): sin6i3,sin6i4,sin6i5
-
-
 # load anchor data -------------------------------------------------------------
 
 zipfile <- "./orig/ZA5678_v14-1_pairfam.zip"
@@ -95,6 +89,8 @@ df1$online <- case_match(df1$pa3,
                          c(7,12,13,14) ~ 1, 
                          c(1:6,8:11) ~ 0)
 df1 %>% count(pa3,online)
+df1$online <- factor(df1$online)
+
 
 ### place of residence Partner: hcp1i1
 df1 %>% count(hcp1i1) 
