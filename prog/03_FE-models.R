@@ -43,12 +43,17 @@ fixest::feglm(same_lp ~ online + factor(age) |id, data = sample_f,family = "bino
 
 
 fixest::feols(distance_finish ~ online |id, data = sample_f)
-fixest::feols(distance_finish ~ online + factor(age)|id, data = sample_f)
+fixest::feols(distance_finish ~ online + factor(age) |id, data = sample_f)
 
 f_mod0 <- fixest::feols(distance_finish ~ gkpol_fct + age + online*year , data = sample_f)
 f_mod1 <- fixest::feols(distance_finish ~ gkpol_fct + age + online*year | id, data = sample_f)
-f_mod2 <- fixest::feols(distance_finish ~ gkpol_fct + age + online*year_fct | id, data = sample_f)
+#f_mod1_split <- fixest::feols(distance_finish ~ gkpol_fct + age + online*year | id, data = sample_f, split = ~ isced_fct)
 
+
+f_mod2 <- fixest::feols(distance_finish ~ gkpol_fct + age + online*year_fct | id, data = sample_f)
+#f_mod2_split <- fixest::feols(distance_finish ~ gkpol_fct + age + online*year_fct | id, data = sample_f, split = ~ isced_fct)
+
+class(df_finish$online)
 
 # men --------------------------------------------------------------------------
 fixest::feols(distance_finish ~ online|id , data = sample_m)
@@ -57,6 +62,9 @@ fixest::feols(distance_finish ~ online , data = sample_m %>% filter(wave==2))
 
 m_mod0 <- fixest::feols(distance_finish ~ gkpol_fct + age + online*year , data = sample_m)
 m_mod1 <- fixest::feols(distance_finish ~ gkpol_fct + age + online*year | id, data = sample_m)
+#m_mod1_split <- fixest::feols(distance_finish ~ gkpol_fct + age + online*year | id, data = sample_m, split = ~ isced_fct)
+
+
 m_mod2 <- fixest::feols(distance_finish ~ gkpol_fct + age + online*year_fct | id, data = sample_m)
 
 
