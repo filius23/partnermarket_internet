@@ -35,25 +35,50 @@ theme_set(
 
 # FE models --------------------------------------------------------------------
 
-### Panel regression by gender with interaction 
+### Panel regression by gender 
+### distances and same living place (same_lp)
 
 # women ------------------------------------------------------------------------
-fixest::feols(same_lp ~ online + factor(age) |id, data = sample_f)
-fixest::feglm(same_lp ~ online + factor(age) |id, data = sample_f,family = "binomial")
+
+##### distances
+fixest::feols(distance_finish ~ online | id, data = sample_f)
+fixest::feols(distance_finish ~ online + cohort + isced_fct + gkpol_fct + migstatus | id, data = sample_f)
+
+##### same_lp
+fixest::feglm(same_lp ~ online |id, data = sample_f,family = "binomial")
+fixest::feglm(same_lp ~ online + cohort + isced_fct + gkpol_fct + migstatus | id, data = sample_f, family = "binomial")
 
 
-fixest::feols(distance_finish ~ online |id, data = sample_f)
-fixest::feols(distance_finish ~ online + factor(age) |id, data = sample_f)
 
-f_mod0 <- fixest::feols(distance_finish ~ gkpol_fct + age + online*year , data = sample_f)
-f_mod1 <- fixest::feols(distance_finish ~ gkpol_fct + age + online*year | id, data = sample_f)
-#f_mod1_split <- fixest::feols(distance_finish ~ gkpol_fct + age + online*year | id, data = sample_f, split = ~ isced_fct)
 
+#fixest::feols(distance_finish ~ online | id, data = sample_f, split = ~ isced_fct)
+
+f_mod0 <- fixest::feols(distance_finish ~ gkpol_fct + online*year , data = sample_f)
+f_mod1 <- fixest::feols(distance_finish ~ gkpol_fct + online*year | id, data = sample_f)
+f_mod1_split <- fixest::feols(distance_finish ~ gkpol_fct + online*year | id, data = sample_f, split = ~ isced_fct)
+
+texreg::screenreg(list(f_mod,f_mod0,f_mod1,f_mod1_split))
 
 f_mod2 <- fixest::feols(distance_finish ~ gkpol_fct + age + online*year_fct | id, data = sample_f)
 #f_mod2_split <- fixest::feols(distance_finish ~ gkpol_fct + age + online*year_fct | id, data = sample_f, split = ~ isced_fct)
 
 class(df_finish$online)
+
+
+
+
+
+
+
+
+
+##### split by education level
+
+
+
+##### with interaction 
+
+
 
 # men --------------------------------------------------------------------------
 fixest::feols(distance_finish ~ online|id , data = sample_m)
