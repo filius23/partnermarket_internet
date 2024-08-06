@@ -1,10 +1,9 @@
 # load packages ----------------------------------------------------------------
-
 library(tidyverse)
 library(haven)
 
-# load anchor data -------------------------------------------------------------
 
+# load anchor data -------------------------------------------------------------
 zipfile <- "./orig/ZA5678_v14-1_pairfam.zip"
 anchor_files <-  
   unzip(zipfile, list = TRUE) %>% 
@@ -63,6 +62,8 @@ df1$isced_fct <- factor(df1$isced_fct, levels = c("low","middle","high"))
 
 ### migration background  ------------------------------------------------------
 df1 %>% count(migstatus)
+df1$migstatus[df1$migstatus<0]<-NA
+df1$migstatus_fct <- factor(ifelse(df1$migstatus == 1, 0, 1))
 
 ### municipality size: gkpol  --------------------------------------------------
 df1 %>% count(gkpol)
@@ -125,7 +126,7 @@ table(df1$distance_total_960)
 
 saveRDS(df1, file = "./data/df1.RDS")
 
-df2 <- df1 %>% select(id, wave, year, year_fct, cohort, age, female, isced, isced_fct, migstatus, gkpol_fct,
+df2 <- df1 %>% select(id, wave, year, year_fct, cohort, age, female, isced, isced_fct, migstatus_fct, gkpol_fct,
                       pa3, online, p_abroad, same_lp, hcp1i2,
                       distance_total, distance_total_960)
 saveRDS(df2, file = "./data/df2.RDS")
@@ -136,7 +137,7 @@ saveRDS(df2, file = "./data/df2.RDS")
 df3 <- df2[df2$wave!=1,]
 saveRDS(df3, file = "./data/df3.RDS")
 
-df4 <- df3 %>% select(id, wave, year, year_fct, cohort, age, female, isced_fct, migstatus, gkpol_fct,
+df4 <- df3 %>% select(id, wave, year, year_fct, cohort, age, female, isced_fct, migstatus_fct, gkpol_fct,
                       pa3, online, p_abroad, same_lp, hcp1i2,
                       distance_total, distance_total_960) 
 saveRDS(df4, file = "./data/df4.RDS")
