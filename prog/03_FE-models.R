@@ -37,50 +37,136 @@ theme_set(
 
 ### Panel regression by gender 
 ### distances and same living place (same_lp)
+### heterogenity (split by education level and interaction year)
 
 # women ------------------------------------------------------------------------
-
 ##### distances
-fixest::feols(distance_finish ~ online | id, data = sample_f)
-fixest::feols(distance_finish ~ online + cohort + isced_fct + gkpol_fct + migstatus | id, data = sample_f)
+m0 <- fixest::feols(distance_finish ~ online | id, data = sample_f)
+m1 <- fixest::feols(distance_finish ~ online + cohort | id, data = sample_f) #Kollinearität Var wird entfernt
+m2 <- fixest::feols(distance_finish ~ online + isced_fct | id, data = sample_f)
+m3 <- fixest::feols(distance_finish ~ online + isced_fct + gkpol_fct | id, data = sample_f)
+m4 <- fixest::feols(distance_finish ~ online + isced_fct + gkpol_fct + migstatus_fct | id, data = sample_f) # migstatus wird aufgrund von Kollinearität ebenflls entfernt
+# migstatus hat viele missing: imputieren?
+
+modelsummary::modelsummary(
+  list(m0,m1,m2,m3,m4), 
+  statistic = "std.error",
+  stars = TRUE)
+
+
 
 ##### same_lp
-fixest::feglm(same_lp ~ online |id, data = sample_f,family = "binomial")
-fixest::feglm(same_lp ~ online + cohort + isced_fct + gkpol_fct + migstatus | id, data = sample_f, family = "binomial")
+m0_glm <- fixest::feglm(same_lp ~ online |id, data = sample_f,family = "binomial")
+m1_glm <- fixest::feglm(same_lp ~ online + cohort | id, data = sample_f, family = "binomial") #Kollinearität Var wird entfernt
+m2_glm <- fixest::feglm(same_lp ~ online + isced_fct | id, data = sample_f, family = "binomial")
+m3_glm <- fixest::feglm(same_lp ~ online + isced_fct + gkpol_fct | id, data = sample_f, family = "binomial")
+m4_glm <- fixest::feglm(same_lp ~ online + cohort + isced_fct + gkpol_fct + migstatus_fct | id, data = sample_f, family = "binomial") # migstatus wird aufgrund von Kollinearität ebenflls entfehrnt
 
-
-
-
-#fixest::feols(distance_finish ~ online | id, data = sample_f, split = ~ isced_fct)
-
-f_mod0 <- fixest::feols(distance_finish ~ gkpol_fct + online*year , data = sample_f)
-f_mod1 <- fixest::feols(distance_finish ~ gkpol_fct + online*year | id, data = sample_f)
-f_mod1_split <- fixest::feols(distance_finish ~ gkpol_fct + online*year | id, data = sample_f, split = ~ isced_fct)
-
-texreg::screenreg(list(f_mod,f_mod0,f_mod1,f_mod1_split))
-
-f_mod2 <- fixest::feols(distance_finish ~ gkpol_fct + age + online*year_fct | id, data = sample_f)
-#f_mod2_split <- fixest::feols(distance_finish ~ gkpol_fct + age + online*year_fct | id, data = sample_f, split = ~ isced_fct)
-
-class(df_finish$online)
-
-
-
-
-
-
+modelsummary::modelsummary(
+  list(m0_glm,m1_glm,m2_glm,m3_glm,m4_glm), 
+  statistic = "std.error",
+  stars = TRUE)
 
 
 
 ##### split by education level
+f_mod0 <- fixest::feols(distance_finish ~ isced_fct + gkpol_fct + migstatus_fct, data = sample_f)
+f_mod1 <- fixest::feols(distance_finish ~ isced_fct + gkpol_fct + migstatus_fct + online | id, data = sample_f)
+f_mod1_split <- fixest::feols(distance_finish ~ gkpol_fct + migstatus_fct + online | id, data = sample_f, split = ~ isced_fct)
+
+modelsummary::modelsummary(
+  list(f_mod0,f_mod1,f_mod1_split), 
+  statistic = "std.error",
+  stars = TRUE)
 
 
+##### with interaction online*year
+f_mod2 <- fixest::feols(distance_finish ~ online*year , data = sample_f)
+f_mod3 <- fixest::feols(distance_finish ~ isced_fct + gkpol_fct + online*year | id, data = sample_f)
 
-##### with interaction 
+modelsummary::modelsummary(
+  list(f_mod2,f_mod3), 
+  statistic = "std.error",
+  stars = TRUE)
+
+
 
 
 
 # men --------------------------------------------------------------------------
+fixest::feols(distance_finish ~ online|id , data = sample_m)
+fixest::feols(distance_finish ~ online , data = sample_m %>% filter(wave==2))
+
+
+sample_m %>% count(migstatus_fct) # migstatus hat viele missing: imputieren? bei Frauen ebenfalls
+
+
+##### distances####isced_fct# distances
+m0_m <- fixest::feols(distance_finish ~ online | id, data = sample_m)
+m1_m <- fixest::feols(distance_finish ~ online + cohort | id, data = sample_m) #Kollinearität Var 'cohort' wird entfernt
+m2_m <- fixest::feols(distance_finish ~ online + isced_fct | id, data = sample_m)
+m3_m <- fixest::feols(distance_finish ~ online + isced_fct + gkpol_fct | id, data = sample_m)
+m4_m <- fixest::feols(distance_finish ~ online + isced_fct + gkpol_fct + migstatus_fct | id, data = sample_m) # migstatus wird aufgrund von Kollinearität ebenflls entfernt
+
+modelsummary::modelsummary(
+  list(m0_m,m1_m,m2_m,m3_m,m4_m), 
+  statistic = "std.error",
+  stars = TRUE)
+
+
+
+##### same_lp
+m0_glm_m <- fixest::feglm(same_lp ~ online |id, data = sample_m,family = "binomial")
+m1_glm_m <- fixest::feglm(same_lp ~ online + cohort | id, data = sample_m, family = "binomial") #Kollinearität Var wird entfernt
+m2_glm_m <- fixest::feglm(same_lp ~ online + isced_fct | id, data = sample_m, family = "binomial")
+m3_glm_m <- fixest::feglm(same_lp ~ online + isced_fct + gkpol_fct | id, data = sample_m, family = "binomial")
+m4_glm_m <- fixest::feglm(same_lp ~ online + cohort + isced_fct + gkpol_fct + migstatus_fct | id, data = sample_m, family = "binomial") # migstatus wird aufgrund von Kollinearität ebenflls entfehrnt
+
+modelsummary::modelsummary(
+  list(m0_glm_m,m1_glm_m,m2_glm_m,m3_glm_m,m4_glm_m), 
+  statistic = "std.error",
+  stars = TRUE)
+
+
+
+
+
+
+#### hier weiter
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+###### men ------------------------- alt -------------------------------------------------
 fixest::feols(distance_finish ~ online|id , data = sample_m)
 
 fixest::feols(distance_finish ~ online , data = sample_m %>% filter(wave==2))
@@ -93,8 +179,17 @@ m_mod1 <- fixest::feols(distance_finish ~ gkpol_fct + age + online*year | id, da
 m_mod2 <- fixest::feols(distance_finish ~ gkpol_fct + age + online*year_fct | id, data = sample_m)
 
 
+
+
+
+
+
+
+
+
+
 ## avg marginal effects -----
-  marginaleffects::avg_slopes(f_mod1, variables = "online", by = "year")
+  marginaleffects::avg_slopes(m_mod1, variables = "online", by = "year")
 
 
 ### ame at year -----------
