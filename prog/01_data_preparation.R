@@ -23,9 +23,9 @@ df0 <-
     print(anch_file)
     read_dta(unz(zipfile, filename = anch_file)) %>%
       select(any_of(col1))
-
+    
   })
-  
+
 saveRDS(df0, file = "./data/anchor_w1-11.RDS")
 df1 <- readRDS(file = "./data/anchor_w1-11.RDS")
 
@@ -72,6 +72,7 @@ df1$gkpol_fct <- case_when(df1$gkpol >= 1 & df1$gkpol <= 3 ~ "small",
                            df1$gkpol >= 4 & df1$gkpol <= 5 ~ "middle",
                            df1$gkpol >= 6 & df1$gkpol <= 7 ~ "big")
 df1$gkpol_fct <- factor(df1$gkpol_fct, levels = c("small","middle","big"))
+
 
 
 

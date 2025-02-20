@@ -46,7 +46,6 @@ m1 <- fixest::feols(distance_finish ~ online + cohort | id, data = sample_f) #Ko
 m2 <- fixest::feols(distance_finish ~ online + isced_fct | id, data = sample_f)
 m3 <- fixest::feols(distance_finish ~ online + isced_fct + gkpol_fct | id, data = sample_f)
 m4 <- fixest::feols(distance_finish ~ online + isced_fct + gkpol_fct + migstatus_fct | id, data = sample_f) # migstatus wird aufgrund von Kollinearität ebenflls entfernt
-# migstatus hat viele missing: imputieren?
 
 modelsummary::modelsummary(
   list(m0,m1,m2,m3,m4), 
@@ -101,7 +100,7 @@ fixest::feols(distance_finish ~ online , data = sample_m %>% filter(wave==2))
 sample_m %>% count(migstatus_fct) # migstatus hat viele missing: imputieren? bei Frauen ebenfalls
 
 
-##### distances####isced_fct# distances
+##### distances
 m0_m <- fixest::feols(distance_finish ~ online | id, data = sample_m)
 m1_m <- fixest::feols(distance_finish ~ online + cohort | id, data = sample_m) #Kollinearität Var 'cohort' wird entfernt
 m2_m <- fixest::feols(distance_finish ~ online + isced_fct | id, data = sample_m)
@@ -128,30 +127,25 @@ modelsummary::modelsummary(
   stars = TRUE)
 
 
+##### split by education level
+m_mod0 <- fixest::feols(distance_finish ~ isced_fct + gkpol_fct + migstatus_fct, data = sample_m)
+m_mod1 <- fixest::feols(distance_finish ~ isced_fct + gkpol_fct + migstatus_fct + online | id, data = sample_m)
+m_mod1_split <- fixest::feols(distance_finish ~ gkpol_fct + migstatus_fct + online | id, data = sample_m, split = ~ isced_fct)
+
+modelsummary::modelsummary(
+  list(m_mod0,m_mod1,m_mod1_split), 
+  statistic = "std.error",
+  stars = TRUE)
 
 
+##### with interaction online*year
+m_mod2 <- fixest::feols(distance_finish ~ online*year , data = sample_m)
+m_mod3 <- fixest::feols(distance_finish ~ isced_fct + gkpol_fct + online*year | id, data = sample_m)
 
-
-#### hier weiter
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+modelsummary::modelsummary(
+  list(m_mod2,m_mod3), 
+  statistic = "std.error",
+  stars = TRUE)
 
 
 
@@ -166,17 +160,22 @@ modelsummary::modelsummary(
 
 
 
-###### men ------------------------- alt -------------------------------------------------
-fixest::feols(distance_finish ~ online|id , data = sample_m)
-
-fixest::feols(distance_finish ~ online , data = sample_m %>% filter(wave==2))
-
-m_mod0 <- fixest::feols(distance_finish ~ gkpol_fct + age + online*year , data = sample_m)
-m_mod1 <- fixest::feols(distance_finish ~ gkpol_fct + age + online*year | id, data = sample_m)
-#m_mod1_split <- fixest::feols(distance_finish ~ gkpol_fct + age + online*year | id, data = sample_m, split = ~ isced_fct)
 
 
-m_mod2 <- fixest::feols(distance_finish ~ gkpol_fct + age + online*year_fct | id, data = sample_m)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -189,7 +188,7 @@ m_mod2 <- fixest::feols(distance_finish ~ gkpol_fct + age + online*year_fct | id
 
 
 ## avg marginal effects -----
-  marginaleffects::avg_slopes(m_mod1, variables = "online", by = "year")
+marginaleffects::avg_slopes(m_mod1, variables = "online", by = "year")
 
 
 ### ame at year -----------
@@ -206,33 +205,33 @@ fixest::feols(distance_finish ~ online*year + age| id, data = sample_f) %>%
 ## apply to models
 
 ame_df <- 
-    list(
-         "F_pool"  = f_mod0,
-         "F_fe"    = f_mod1,
-         "F_fe.fct"= f_mod2,
-         "M_pool"  = m_mod0,
-         "M_fe"    = m_mod1,
-         "M_fe.fct"= m_mod2
-         ) |>
-      map(ame_at_year) |>
-      list_rbind(names_to = "model") |>
-      separate_wider_delim(cols = model,delim = "_",names = c("gender","specification"))
-   
-  
+  list(
+    "F_pool"  = f_mod0,
+    "F_fe"    = f_mod1,
+    "F_fe.fct"= f_mod2,
+    "M_pool"  = m_mod0,
+    "M_fe"    = m_mod1,
+    "M_fe.fct"= m_mod2
+  ) |>
+  map(ame_at_year) |>
+  list_rbind(names_to = "model") |>
+  separate_wider_delim(cols = model,delim = "_",names = c("gender","specification"))
+
+
 # Plot ----
 ame_plt <- 
   ame_df %>% 
-    ggplot(aes(x=year,y=estimate, ymin= conf.low, ymax = conf.high, color = p.value < .05))  +
-      geom_hline(aes(yintercept = 0), linetype = 2, color = "navy") +
-      geom_errorbar() + 
-      geom_point()+
-      facet_grid(gender~specification) +
-      scale_color_manual(values = c("grey40","orange")) + 
-      scale_x_continuous(breaks = seq(2,11,2), labels = seq(2009,2017,2)) + 
-      labs(color = "p value for difference vs. offline",
-        x = "year", y = "average marginal effect") +
-      theme(legend.position="bottom",
-            strip.text.y = element_text(angle = 0,size=rel(2)),
-            strip.text.x = element_text(angle = 0,size=rel(2)))
+  ggplot(aes(x=year,y=estimate, ymin= conf.low, ymax = conf.high, color = p.value < .05))  +
+  geom_hline(aes(yintercept = 0), linetype = 2, color = "navy") +
+  geom_errorbar() + 
+  geom_point()+
+  facet_grid(gender~specification) +
+  scale_color_manual(values = c("grey40","orange")) + 
+  scale_x_continuous(breaks = seq(2,11,2), labels = seq(2009,2017,2)) + 
+  labs(color = "p value for difference vs. offline",
+       x = "year", y = "average marginal effect") +
+  theme(legend.position="bottom",
+        strip.text.y = element_text(angle = 0,size=rel(2)),
+        strip.text.x = element_text(angle = 0,size=rel(2)))
 ame_plt                 
 # ggsave("bb.png", width = 12, height = 12, units = "cm")
