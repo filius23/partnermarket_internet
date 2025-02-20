@@ -8,7 +8,7 @@ auslagerungen_AF
 RFS.Rmd
 RFS_files
 
-
+*.docx
 /orig/ZA5678_v14-1_pairfam.zip
 /data/*.RDS
 
